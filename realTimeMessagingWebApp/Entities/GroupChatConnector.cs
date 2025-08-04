@@ -3,9 +3,9 @@
     public class GroupChatConnector
     {
         // this table is for connecting user to gropu chats to have many to many relationship between users and groupchats
-        public Guid GroupChatConnectorId { get; set; }
-        public Guid GroupChatId { get; set; }
-        public Guid UserId { get; set; }
+        public Guid GroupChatConnectorID { get; set; }
+        public Guid GroupChatID { get; set; }
+        public Guid UserID { get; set; }
         public DateTime JoinDate { get; set; }
 
         // Nav properties
