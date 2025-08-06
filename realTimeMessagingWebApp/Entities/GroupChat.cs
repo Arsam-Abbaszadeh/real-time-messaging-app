@@ -4,7 +4,7 @@ namespace realTimeMessagingWebApp.Entities
 {
     public class GroupChat
     {
-        public Guid GroupChatID { get; set; }
+        public Guid GroupChatId { get; set; }
         public string GroupChatName { get; set; }
         public DateTime CreationDate { get; set; }
         public Guid GroupChatCreator { get; set; }
