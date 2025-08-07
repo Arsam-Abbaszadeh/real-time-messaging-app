@@ -28,10 +28,13 @@ namespace realTimeMessagingWebApp.Controllers
             var creationResult = await _userService.CreateNewUser(newUser, createUserDto.Password);
             if (!creationResult.IsSuccess) 
             {
-
+                return BadRequest(creationResult.Message);
             }
-            
+            var userSummary = UserDtoMapper.ToUserSummaryDto(newUser);
+            return Ok(userSummary);
         }
+
+
 
     }
 }
