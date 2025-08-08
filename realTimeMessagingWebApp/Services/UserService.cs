@@ -42,16 +42,16 @@ namespace realTimeMessagingWebApp.Services
             };   
         }
 
-        public async Task<ServiceResult> LoginUser(User user, string password)
+        public async Task<ServiceResult> LoginUser(string userName, string password)
         {
-            if (user is null) throw new ArgumentNullException(nameof(user)); // should never really happen
-            var loginUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == user.UserName);
+            if (userName is null) throw new ArgumentNullException(nameof(userName)); // should never really happen and a bit random
+            var loginUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == userName);
             if (loginUser is null)
             {
                 return new ServiceResult
                 {
                     IsSuccess = false,
-                    Message = $"The username {user.UserName} does not exists"
+                    Message = $"The username {userName} does not exists"
                 };
             }
 
@@ -67,6 +67,12 @@ namespace realTimeMessagingWebApp.Services
                     Message = $"Succesful login attempt as user {loginUser.UserName}"
                 };
             }
+
+            return new ServiceResult
+            {
+                IsSuccess = false,
+                Message = "Invalid password"
+            };
         }
 
         public Task<ServiceResult> DeleteUser(User user)

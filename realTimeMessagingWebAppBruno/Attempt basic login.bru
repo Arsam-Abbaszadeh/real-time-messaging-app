@@ -1,0 +1,18 @@
+meta {
+  name: Attempt basic login
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:5231/api/User/Login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userName": "myNewUser2",
+    "password": "AmazingPassword2"
+  }
+}
