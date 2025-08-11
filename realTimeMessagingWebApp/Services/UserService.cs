@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using realTimeMessagingWebApp.Auth;
 using realTimeMessagingWebApp.Data;
 using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebApp.Services.ResponseModels;
 using System.Reflection;
 
 namespace realTimeMessagingWebApp.Services

@@ -61,6 +61,5 @@ namespace realTimeMessagingWebApp.Controllers
                 Message = loginResult.Message
             });
         }
-
     }
 }

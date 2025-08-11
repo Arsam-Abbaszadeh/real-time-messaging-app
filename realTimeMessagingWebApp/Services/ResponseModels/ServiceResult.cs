@@ -1,4 +1,4 @@
-﻿namespace realTimeMessagingWebApp.Services
+﻿namespace realTimeMessagingWebApp.Services.ResponseModels
 {
     public class ServiceResult
     {
