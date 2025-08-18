@@ -27,7 +27,7 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection(); // dont need for now
 
-//app.UseAuthorization(); // havent implemented
+app.UseAuthorization(); // havent implemented
 
 app.MapControllers();
 

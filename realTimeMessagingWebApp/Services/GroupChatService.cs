@@ -24,14 +24,15 @@ namespace realTimeMessagingWebApp.Services
             throw new NotImplementedException();
         }
 
-        public async Task<ServiceResult> CreateNewGroupChat(GroupChat groupChat, User Member)
+        public Task<ServiceResult> CreateNewGroupChat(GroupChat groupChat, Guid Creator, Guid? Admin)
         {
-            
-            return new ServiceResult
-            {
-                IsSuccess = true,
-                Message = "New Group Chat Created",
-            };
+            throw new NotImplementedException();
+            // cant continue implementing until I implement auth
+        }
+
+        public Task<ServiceResult> DeleteGroupChat(GroupChat groupChat)
+        {
+            throw new NotImplementedException();
         }
     }
 }

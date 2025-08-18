@@ -49,6 +49,16 @@ namespace realTimeMessagingWebApp.Controllers
             var loginResult = await _userService.LoginUser(loginUserDto.UserName, loginUserDto.Password);
             if (loginResult.IsSuccess) 
             {
+                var jwtToken = "token placeholder for when I implement token service";
+
+                Response.Cookies.Append("Jwt", jwtToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1), // this should be stored not hard coded. probs inject app settings and we pass around the configurations
+                    SameSite = SameSiteMode.Strict // this is a security measure to prevent CSRF attacks apperently, idk if its actually needed hyet
+                }); // add 
+
                 return Ok(new RequestResponse
                 {
                      IsSuccess = true,
@@ -57,7 +67,6 @@ namespace realTimeMessagingWebApp.Controllers
             }
             return Unauthorized(new RequestResponse
             {
-                IsSuccess = false,
                 Message = loginResult.Message
             });
         }

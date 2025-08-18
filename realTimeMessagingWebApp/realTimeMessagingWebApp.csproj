@@ -13,6 +13,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client" Version="4.74.1" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.13.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.13.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
