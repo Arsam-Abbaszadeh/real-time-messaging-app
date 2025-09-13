@@ -55,7 +55,7 @@ namespace realTimeMessagingWebApp.Controllers
                 {
                     HttpOnly = true,
                     Secure = true,
-                    Expires = DateTimeOffset.UtcNow.AddHours(1), // this should be stored not hard coded. probs inject app settings and we pass around the configurations
+                    Expires = DateTime.UtcNow.AddHours(1), // this should be stored not hard coded. probs inject app settings and we pass around the configurations
                     SameSite = SameSiteMode.Strict // this is a security measure to prevent CSRF attacks apperently, idk if its actually needed hyet
                 }); // add 
 

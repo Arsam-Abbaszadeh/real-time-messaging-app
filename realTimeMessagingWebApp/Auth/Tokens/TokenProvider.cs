@@ -9,7 +9,7 @@ namespace realTimeMessagingWebApp.Auth.Tokens
     {
         readonly IConfiguration configuration = configuration; // service not yet actually injected
 
-        public string CreateJwt(User user)
+        public string CreateJwt(User user, DateTime expiration)
         {
             string secretKey = configuration["Jwt:SecretKey"];
             var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secretKey));
@@ -23,7 +23,7 @@ namespace realTimeMessagingWebApp.Auth.Tokens
                     new Claim("id", user.UserId.ToString()),
                     new Claim("username", user.UserName)
                 ]),
-                Expires = DateTime.UtcNow.AddMinutes(60), // add actual value to appsettings later
+                Expires = expiration,
                 SigningCredentials = credentials,
                 Issuer = configuration["Jwt:Issuer"], // understand requirement for Issuer and Audience and actually set
                 Audience = configuration["Jwt:Audience"],

@@ -1,6 +1,7 @@
 ﻿namespace realTimeMessagingWebApp.Services
 {
-    public class ResponseModels
+    public class TokenService : ITokenService
     {
+
     }
 }
