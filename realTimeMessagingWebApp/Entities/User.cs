@@ -9,5 +9,7 @@
         public DateTime SignUpDate { get; set; }
         
         public ICollection<GroupChat> GroupChats { get; set; } = new HashSet<GroupChat>();
+        
+        public ICollection<RefreshToken> refreshTokens { get; set; } = new HashSet<RefreshToken>();
     }
 }

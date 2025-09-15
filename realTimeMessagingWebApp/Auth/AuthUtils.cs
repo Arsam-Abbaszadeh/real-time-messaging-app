@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace realTimeMessagingWebApp.Auth; // add my own namespace
-// This file is is stolen from microsft identity auth
+// This file is is copied from microsft identity auth
 
 public class AuthUtils
 {

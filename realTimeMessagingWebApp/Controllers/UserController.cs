@@ -9,12 +9,13 @@ namespace realTimeMessagingWebApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController(IUserService userService) : ControllerBase
+    public class UserController(IUserService userService, ITokenService tokenService) : ControllerBase
     {
         // a controller for managing user
         // for instance when logged getting all the chats for this user
-        private readonly IUserService _userService = userService;
 
+        readonly IUserService _userService = userService;
+        readonly ITokenService _tokenService = tokenService;
 
         // user CRUD endpoints
         [HttpPost("createNewUser")]
@@ -40,7 +41,6 @@ namespace realTimeMessagingWebApp.Controllers
         public async Task<ActionResult<RequestResponse>> LoginUser([FromBody] LoginUserDto loginUserDto)
         {
             // TODO implement auth to pass through with login result
-            // ATM this only validates a credentials and returns a response, it does not do any auth
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -49,24 +49,29 @@ namespace realTimeMessagingWebApp.Controllers
             var loginResult = await _userService.LoginUser(loginUserDto.UserName, loginUserDto.Password);
             if (loginResult.IsSuccess) 
             {
-                var jwtToken = "token placeholder for when I implement token service";
+                var refreshToken = _tokenService.NewRefreshToken();
 
-                Response.Cookies.Append("Jwt", jwtToken, new CookieOptions
+                Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
                     Expires = DateTime.UtcNow.AddHours(1), // this should be stored not hard coded. probs inject app settings and we pass around the configurations
-                    SameSite = SameSiteMode.Strict // this is a security measure to prevent CSRF attacks apperently, idk if its actually needed hyet
-                }); // add 
+                    SameSite = SameSiteMode.Strict // might be lax
+                });
+
+                var accessToken = _tokenService.NewAccesssToken(refreshToken);
 
                 return Ok(new RequestResponse
                 {
-                     IsSuccess = true,
-                     Message = $"User {loginUserDto.UserName} logged in successfully"
+                    IsSuccess = true,
+                    Message = $"User {loginUserDto.UserName} logged in successfully",
+                    AccessToken = accessToken
                 });
             }
+
             return Unauthorized(new RequestResponse
             {
+                IsSuccess = false,
                 Message = loginResult.Message
             });
         }
