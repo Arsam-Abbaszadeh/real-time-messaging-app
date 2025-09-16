@@ -10,7 +10,7 @@ namespace realTimeMessagingWebApp.Services
 
         public Task<ServiceResult> RevokeRefreshTokenForUser(User user);
 
-        public string NewAccesssToken(string refreshToken);
+        public Task<string> NewAccesssToken(string refreshToken);
 
         public string NewRefreshToken(); // not sure what it needs to take in
 

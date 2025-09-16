@@ -17,9 +17,17 @@ namespace realTimeMessagingWebApp.Services
         readonly IConfiguration _configuration = configuration; // service nopt registerd yet
         readonly Context _context = context;
 
-        public string NewAccesssToken(string refreshToken)
+        public async Task<string> NewAccesssToken(string refreshToken)
         {
-            throw new NotImplementedException();
+            var validRefreshToken = await _context.RefreshTokens.Include(r => r.User).FirstOrDefaultAsync(t => t.Token == refreshToken);
+            if (validRefreshToken?.isValid == true)
+            {
+                // expiration date may be inconsistent with other stuff
+                var newAccessToken = GenerateAccessToken(validRefreshToken.User, DateTime.Today.AddDays(1)); // need a mechanism for loading the right expiration dates
+                return newAccessToken;
+            }
+            
+            throw new InvalidOperationException("trying get new access token using expired or unknown refresh token"); // not exactly sure what exeception type should be thrown tbh
         }
 
         public string NewRefreshToken()
@@ -43,24 +51,32 @@ namespace realTimeMessagingWebApp.Services
                 IsSuccess = true,
                 Message = $"Refresh Token for user {refreshToken.User.UserName} was revoked"
             };
-
         }
 
         public async Task<ServiceResult> RevokeRefreshTokenForUser(User user)
         {
-            if (user.refreshTokens is null)
+            // assuming user is valid, might be a dumb approach
+            await _context.Entry(user)
+                .Collection(u => u.refreshTokens)
+                .Query()
+                .Where(t => t.isValid)
+                .LoadAsync();
+
+            if (!user.refreshTokens.Any())
             {
-                var refreshTokens = await _context.RefreshTokens
-                    .Where(t => t.UserId == user.UserId && t.isValid)
-                    .ToListAsync();
-
-                foreach (var token in refreshTokens)
+                return new ServiceResult
                 {
-                    token.isValid = false;
-                }
-
-                await _context.SaveChangesAsync();
+                    IsSuccess = true,
+                    Message = $"User  {user.UserName} doesn't have any active refresh tokens"
+                };
             }
+            
+            foreach (var token in user.refreshTokens)
+            {
+                token.isValid = false;
+            }
+
+            await _context.SaveChangesAsync();
 
             return new ServiceResult
             {
