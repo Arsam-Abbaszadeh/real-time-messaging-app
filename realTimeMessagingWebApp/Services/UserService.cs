@@ -65,7 +65,8 @@ namespace realTimeMessagingWebApp.Services
                 return new ServiceResult
                 {
                     IsSuccess = true,
-                    Message = $"Succesful login attempt as user {loginUser.UserName}"
+                    Message = $"Succesful login attempt as user {loginUser.UserName}",
+                    Data = loginUser
                 };
             }
 

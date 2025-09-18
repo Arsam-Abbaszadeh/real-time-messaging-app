@@ -4,6 +4,7 @@ using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.DtoMappers;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
+using realTimeMessagingWebApp.Entities;
 
 namespace realTimeMessagingWebApp.Controllers
 {
@@ -34,13 +35,12 @@ namespace realTimeMessagingWebApp.Controllers
             }
 
             var userSummary = UserDtoMapper.ToUserSummaryDto(newUser);
-            return Ok(userSummary);
+            return Ok(userSummary); // tihis should then somehow lead into login flow after new user got created
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<RequestResponse>> LoginUser([FromBody] LoginUserDto loginUserDto)
         {
-            // TODO implement auth to pass through with login result
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -49,7 +49,7 @@ namespace realTimeMessagingWebApp.Controllers
             var loginResult = await _userService.LoginUser(loginUserDto.UserName, loginUserDto.Password);
             if (loginResult.IsSuccess) 
             {
-                var refreshToken = _tokenService.NewRefreshToken();
+                var refreshToken = await _tokenService.NewRefreshToken((User)loginResult.Data);
 
                 Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
                 {
@@ -59,7 +59,7 @@ namespace realTimeMessagingWebApp.Controllers
                     SameSite = SameSiteMode.Strict // might be lax
                 });
 
-                var accessToken = _tokenService.NewAccesssToken(refreshToken);
+                var accessToken = await _tokenService.NewAccessToken(refreshToken);
 
                 return Ok(new RequestResponse
                 {

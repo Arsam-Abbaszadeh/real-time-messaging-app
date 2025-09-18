@@ -17,22 +17,35 @@ namespace realTimeMessagingWebApp.Services
         readonly IConfiguration _configuration = configuration; // service nopt registerd yet
         readonly Context _context = context;
 
-        public async Task<string> NewAccesssToken(string refreshToken)
+        public async Task<string> NewAccessToken(string refreshToken)
         {
             var validRefreshToken = await _context.RefreshTokens.Include(r => r.User).FirstOrDefaultAsync(t => t.Token == refreshToken);
             if (validRefreshToken?.isValid == true)
             {
                 // expiration date may be inconsistent with other stuff
                 var newAccessToken = GenerateAccessToken(validRefreshToken.User, DateTime.Today.AddDays(1)); // need a mechanism for loading the right expiration dates
-                return newAccessToken;
+                return await newAccessToken;
             }
             
             throw new InvalidOperationException("trying get new access token using expired or unknown refresh token"); // not exactly sure what exeception type should be thrown tbh
         }
 
-        public string NewRefreshToken()
+        public async Task<string> NewRefreshToken(User user)
         {
-            throw new NotImplementedException();
+            var token = GenerateRefreshToken();
+
+            var refreshToken = new RefreshToken
+            {
+                Token = token,
+                UserId = user.UserId,
+                ExpirationUtc = DateTime.UtcNow.AddDays(7), // need a mechanism for loading the right expiration dates
+                isValid = true
+            };
+
+            await _context.RefreshTokens.AddAsync(refreshToken);
+            await _context.SaveChangesAsync();
+
+            return token;
         }
 
         public async Task<ServiceResult> RevokeRefreshToken(string token)
