@@ -28,8 +28,9 @@ namespace realTimeMessagingWebApp.Controllers
             //}
 
             var newGroupChat = GroupChatDtoMappers.ToGroupChatEntity(groupChatDto);
-            var result = _groupChatService.CreateNewGroupChat(newGroupChat);
+            //var result = _groupChatService.CreateNewGroupChat(newGroupChat);
 
+            throw new NotImplementedException(); // need to implement the service method first
         }
     }
 }

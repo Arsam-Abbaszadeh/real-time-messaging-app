@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using realTimeMessagingWebApp.Data;
 using realTimeMessagingWebApp.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 // Connect db for context
@@ -9,9 +13,23 @@ builder.Services.AddDbContext<Context>(options => options.UseNpgsql(connectionSt
 
 // Add services to the container
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddControllers();
 
 
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.RequireHttpsMetadata = false; // idk what htis does
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ClockSkew = TimeSpan.Zero // idk what this does either
+        };
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -27,7 +45,8 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection(); // dont need for now
 
-app.UseAuthorization(); // havent implemented
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

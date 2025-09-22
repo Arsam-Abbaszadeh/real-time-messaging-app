@@ -5,9 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 using realTimeMessagingWebApp.Data;
 using realTimeMessagingWebApp.Entities;
 using realTimeMessagingWebApp.Services.ResponseModels;
+using System.ComponentModel;
 using System.Security.Claims;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace realTimeMessagingWebApp.Services
 {
@@ -17,20 +19,20 @@ namespace realTimeMessagingWebApp.Services
         readonly IConfiguration _configuration = configuration; // service nopt registerd yet
         readonly Context _context = context;
 
-        public async Task<string> NewAccessToken(string refreshToken)
+        public async Task<string> NewAccessToken(string refreshToken, DateTime expiration)
         {
             var validRefreshToken = await _context.RefreshTokens.Include(r => r.User).FirstOrDefaultAsync(t => t.Token == refreshToken);
             if (validRefreshToken?.isValid == true)
             {
                 // expiration date may be inconsistent with other stuff
-                var newAccessToken = GenerateAccessToken(validRefreshToken.User, DateTime.Today.AddDays(1)); // need a mechanism for loading the right expiration dates
-                return await newAccessToken;
+                var newAccessToken = GenerateAccessToken(validRefreshToken.User, expiration); // need a mechanism for loading the right expiration dates
+                return newAccessToken;
             }
             
             throw new InvalidOperationException("trying get new access token using expired or unknown refresh token"); // not exactly sure what exeception type should be thrown tbh
         }
 
-        public async Task<string> NewRefreshToken(User user)
+        public async Task<string> NewRefreshToken(User user, DateTime expiration) // assumes user is valid
         {
             var token = GenerateRefreshToken();
 
@@ -38,7 +40,7 @@ namespace realTimeMessagingWebApp.Services
             {
                 Token = token,
                 UserId = user.UserId,
-                ExpirationUtc = DateTime.UtcNow.AddDays(7), // need a mechanism for loading the right expiration dates
+                ExpirationUtc = expiration,
                 isValid = true
             };
 
@@ -98,6 +100,44 @@ namespace realTimeMessagingWebApp.Services
             };
         }
 
+        public async Task<TokenValidationServiceResult> ValidateAccessToken(string accessToken)
+        {
+            string secretKey = _configuration["Jwt:SecretKey"];
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+
+            var handler = new JsonWebTokenHandler();
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidAudience = _configuration["Jwt:Audience"],
+                IssuerSigningKey = securityKey,
+                ClockSkew = TimeSpan.Zero, // optional: to reduce the allowed clock skew time
+                ValidateLifetime = false
+            };
+
+            // doesnt throw exception, just returns the exception in the result object
+            var result = await handler.ValidateTokenAsync(accessToken, tokenValidationParameters);
+            if (result.IsValid)
+            {
+                return new TokenValidationServiceResult
+                {
+                    validationResult = true,
+                    validationSuccess = true,
+                    message = "Token is valid"
+                };
+            }
+            else
+            {
+                return new TokenValidationServiceResult
+                {
+                    validationResult = true,
+                    validationSuccess = false,
+                    message = result.Exception?.Message ?? "Token is invalid"
+                };
+            }
+        }
+
+
         #region tokenProvider
 
         string GenerateAccessToken(User user, DateTime expiration)
@@ -109,14 +149,14 @@ namespace realTimeMessagingWebApp.Services
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(
+                Subject = new ClaimsIdentity( // TODO will eventually need dynamic claims probably
                 [
                     new Claim("id", user.UserId.ToString()),
-                new Claim("username", user.UserName)
+                    new Claim("username", user.UserName)
                 ]),
                 Expires = expiration,
                 SigningCredentials = credentials,
-                Issuer = _configuration["Jwt:Issuer"], // understand requirement for Issuer and Audience and actually set
+                Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
             };
 
