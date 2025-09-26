@@ -1,12 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.Tokens;
 using realTimeMessagingWebApp.Data;
 using realTimeMessagingWebApp.Entities;
 using realTimeMessagingWebApp.Services.ResponseModels;
 using System.ComponentModel;
-using System.Security.Claims;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,17 +17,31 @@ namespace realTimeMessagingWebApp.Services
         readonly IConfiguration _configuration = configuration; // service nopt registerd yet
         readonly Context _context = context;
 
-        public async Task<string> NewAccessToken(string refreshToken, DateTime expiration)
+        public async Task<AccessTokenResult> NewAccessToken(string refreshToken, DateTime expiration)
         {
             var validRefreshToken = await _context.RefreshTokens.Include(r => r.User).FirstOrDefaultAsync(t => t.Token == refreshToken);
             if (validRefreshToken?.isValid == true)
             {
-                // expiration date may be inconsistent with other stuff
-                var newAccessToken = GenerateAccessToken(validRefreshToken.User, expiration); // need a mechanism for loading the right expiration dates
-                return newAccessToken;
+                if (validRefreshToken.ExpirationUtc > DateTime.UtcNow)
+                {
+                    var newAccessToken = GenerateAccessToken(validRefreshToken.User, expiration); // need a mechanism for loading the right expiration dates
+                    return new AccessTokenResult
+                    {
+                        AccessToken = newAccessToken,
+                        ValidRefreshToken = true,
+                        Message = "New access token granted"
+                    };
+                }
+
+                validRefreshToken.isValid = false;
+                await _context.SaveChangesAsync();
             }
-            
-            throw new InvalidOperationException("trying get new access token using expired or unknown refresh token"); // not exactly sure what exeception type should be thrown tbh
+
+            return new AccessTokenResult
+            {
+                ValidRefreshToken = false,
+                Message = "Cannot get new access token using invalid refresh token"
+            };
         }
 
         public async Task<string> NewRefreshToken(User user, DateTime expiration) // assumes user is valid
@@ -112,7 +124,7 @@ namespace realTimeMessagingWebApp.Services
                 ValidAudience = _configuration["Jwt:Audience"],
                 IssuerSigningKey = securityKey,
                 ClockSkew = TimeSpan.Zero, // optional: to reduce the allowed clock skew time
-                ValidateLifetime = false
+                ValidateLifetime = true
             };
 
             // doesnt throw exception, just returns the exception in the result object

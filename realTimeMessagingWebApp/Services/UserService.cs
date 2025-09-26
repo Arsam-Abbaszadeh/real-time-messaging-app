@@ -19,7 +19,8 @@ namespace realTimeMessagingWebApp.Services
 
         public async Task<ServiceResult> CreateNewUser(User user, string password)
         {
-            if (user is null) throw new ArgumentNullException(nameof(user)); // should never really happen
+            _ = user ?? throw new ArgumentNullException(nameof(user));// should never really happen
+
             var userExists = await _context.Users.AnyAsync(u => u.UserName == user.UserName);
             if (userExists)
             {
@@ -30,7 +31,7 @@ namespace realTimeMessagingWebApp.Services
                 };
             }
             user.UserId = Guid.NewGuid();
-            user.SignUpDate = DateTime.UtcNow;
+            user.SignUpDate = DateTime.Now;
             user.PasswordHash = AuthUtils.HashPassword(password);
 
             _context.Add(user);

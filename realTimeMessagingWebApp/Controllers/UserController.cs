@@ -54,25 +54,26 @@ namespace realTimeMessagingWebApp.Controllers
             var loginResult = await _userService.LoginUser(loginUserDto.UserName, loginUserDto.Password);
             if (loginResult.IsSuccess) 
             {
-                var refreshExpiration = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:RefreshExpiration"));
+                var refreshExpiration = DateTime.Now.AddDays(_configuration.GetValue<int>("Jwt:RefreshExpiration"));
                 var refreshToken = await _tokenService.NewRefreshToken((User)loginResult.Data, refreshExpiration);
 
                 Response.Cookies.Append(RefreshTokenName, refreshToken, new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
-                    Expires = DateTime.UtcNow.AddHours(1),
+                    Expires = DateTime.Now.AddHours(1),
                     SameSite = SameSiteMode.Lax // might be strict
                 });
 
                 var accessExpiration = DateTime.Now.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration")); // configure for UTC
-                var accessToken = await _tokenService.NewAccessToken(refreshToken, accessExpiration);
+                var accessTokenResult = await _tokenService.NewAccessToken(refreshToken, accessExpiration);
+
 
                 return Ok(new UserAccessResultDto
                 {
                     IsSuccessful = true,
                     Message = $"User {loginUserDto.UserName} logged in successfully",
-                    AccessToken = accessToken
+                    AccessToken = accessTokenResult.AccessToken
                 });
             }
 
@@ -111,21 +112,27 @@ namespace realTimeMessagingWebApp.Controllers
                 }
 
                 var refreshToken = Request.Cookies[RefreshTokenName]; // is worth checking this before validating access token?
+
                 if (string.IsNullOrEmpty(refreshToken))
                 {
                     return Unauthorized("Refresh token is required to refresh access token");
                 }
 
+                var expiration = DateTime.Now.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration"));
+                var accessTokenResult = await _tokenService.NewAccessToken(refreshToken, expiration); //actually get user
+
                 try
                 {
-                    var expiration = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration"));
-                    var newAccessToken = await _tokenService.NewAccessToken(refreshToken, expiration); //actually get user
-                    return Ok(new UserAccessResultDto
+                     if (accessTokenResult.ValidRefreshToken)
                     {
-                        IsSuccessful = true,
-                        Message = "new access token generated successfully",
-                        AccessToken = newAccessToken
-                    });
+                        return Ok(new UserAccessResultDto
+                        {
+                            IsSuccessful = true,
+                            Message = "new access token generated successfully",
+                            AccessToken = accessTokenResult.AccessToken
+                        });
+                    }
+
                 } 
                 catch (InvalidOperationException ex)
                 {

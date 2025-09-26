@@ -1,5 +1,6 @@
 ﻿using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebApp.Enums;
 
 namespace realTimeMessagingWebApp.DTOMappers
 {
@@ -10,7 +11,7 @@ namespace realTimeMessagingWebApp.DTOMappers
             return new GroupChat
             {
                 GroupChatName = createGroupChatDto.GroupChatName,
-                GroupChatAdminId = createGroupChatDto.AdminId
+                GroupChatType
             };
         }
     }

@@ -27,8 +27,14 @@ namespace realTimeMessagingWebApp.Controllers
             //    });
             //}
 
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == "id")?.Value); // should not null if token is validated
+
             var newGroupChat = GroupChatDtoMappers.ToGroupChatEntity(groupChatDto);
-            //var result = _groupChatService.CreateNewGroupChat(newGroupChat);
+            var result = _groupChatService.CreateNewGroupChat(newGroupChat, userId, groupChatDto.Admin);
+
+
+
+            
 
             throw new NotImplementedException(); // need to implement the service method first
         }

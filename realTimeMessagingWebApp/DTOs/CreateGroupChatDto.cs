@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebApp.Enums;
 
 namespace realTimeMessagingWebApp.DTOs
 {
@@ -8,9 +9,13 @@ namespace realTimeMessagingWebApp.DTOs
         [Required]
         public string GroupChatName { get; set; }
 
-        ICollection<User> GroupChatMembers { get; set; } = new HashSet<User>();
+        public ICollection<User> GroupChatMembers { get; set; } = new HashSet<User>();
 
-        public Guid AdminId { get; set; }
+        public GroupChatType GroupChatType { get; set; } // I dont like how this needs to be synced across
+
+        public Guid? Admin { get; set; }
+
+        //public Guid AdminId { get; set; } // We can get this from the JWT
 
     }
 }
