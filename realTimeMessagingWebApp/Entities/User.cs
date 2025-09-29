@@ -10,6 +10,17 @@
         
         public ICollection<GroupChat> GroupChats { get; set; } = new HashSet<GroupChat>();
         
-        public ICollection<RefreshToken> refreshTokens { get; set; } = new HashSet<RefreshToken>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new HashSet<RefreshToken>();
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not User)
+            {
+                return false;
+            }
+
+            var other = (User)obj;
+            return UserId == other.UserId;
+        }
     }
 }

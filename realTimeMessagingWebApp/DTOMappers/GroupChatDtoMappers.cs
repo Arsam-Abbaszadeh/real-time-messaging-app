@@ -11,7 +11,17 @@ namespace realTimeMessagingWebApp.DTOMappers
             return new GroupChat
             {
                 GroupChatName = createGroupChatDto.GroupChatName,
-                GroupChatType
+                ChatType = createGroupChatDto.GroupChatType,
+            };
+        }
+
+        public static GroupChatSummaryDto ToGroupChatSummaryDto(GroupChat groupChat)
+        {
+            return new GroupChatSummaryDto
+            {
+                GroupChatCreationDate = groupChat.CreationDate,
+                GroupChatName = groupChat.GroupChatName,
+                GroupChatId = groupChat.GroupChatId,
             };
         }
     }

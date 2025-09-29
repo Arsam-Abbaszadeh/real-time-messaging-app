@@ -84,12 +84,12 @@ namespace realTimeMessagingWebApp.Services
         {
             // assuming user is valid, might be a dumb approach
             await _context.Entry(user)
-                .Collection(u => u.refreshTokens)
+                .Collection(u => u.RefreshTokens)
                 .Query()
                 .Where(t => t.isValid)
                 .LoadAsync();
 
-            if (!user.refreshTokens.Any())
+            if (!user.RefreshTokens.Any())
             {
                 return new ServiceResult
                 {
@@ -98,7 +98,7 @@ namespace realTimeMessagingWebApp.Services
                 };
             }
             
-            foreach (var token in user.refreshTokens)
+            foreach (var token in user.RefreshTokens)
             {
                 token.isValid = false;
             }

@@ -5,38 +5,180 @@ using realTimeMessagingWebApp.DtoMappers;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
 using realTimeMessagingWebApp.DTOMappers;
+using System.Reflection.Metadata.Ecma335;
+using realTimeMessagingWebApp.Entities;
 
 namespace realTimeMessagingWebApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class GroupChatController(IGroupChatService groupChatService, IUserService userService): ControllerBase // should maybe make chat lower case
+    public class ChatController(IGroupChatService groupChatService, IAuthService authService) : ControllerBase // should maybe make chat lower case
     {
         private readonly IGroupChatService _groupChatService = groupChatService;
-        private readonly IUserService _userService = userService;
+        private readonly IAuthService _authService = authService;
 
         [HttpPost("newchat")]
-        public Task<ActionResult<RequestResponse>> CreateNewGroupChat([FromBody] CreateGroupChatDto groupChatDto)
+        public async Task<ActionResult<RequestResponse>> CreateNewGroupChat([FromBody] CreateGroupChatDto groupChatDto)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return BadRequest(new RequestResponse
-            //    {
-            //        IsSuccess = false,
-            //        Message = "Bad Request, Couldnt create group chat"
-            //    });
-            //}
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = "Invalid data"
+                });
+            }
 
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == "id")?.Value); // should not null if token is validated
+            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
 
             var newGroupChat = GroupChatDtoMappers.ToGroupChatEntity(groupChatDto);
-            var result = _groupChatService.CreateNewGroupChat(newGroupChat, userId, groupChatDto.Admin);
+            var groupChatResult = await _groupChatService.CreateAndAddMembersToGroupChat(newGroupChat, userId, groupChatDto.GroupChatMembers);
 
+            if (groupChatResult.IsSuccess)
+            {
+                var groupChatSummary = GroupChatDtoMappers.ToGroupChatSummaryDto((GroupChat)groupChatResult.Data!);
+                return Ok(new RequestResponse
+                {
+                    IsSuccess = true,
+                    Message = groupChatResult.Message,
+                });
+            }
+            else
+            {
+                return BadRequest(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = groupChatResult.Message
+                });
+            }
+        }
 
+        [HttpDelete("{groupChatId}")]
+        public async Task<ActionResult<RequestResponse>> DeleteGroupChat([FromRoute] Guid groupChatId)
+        {
+            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
 
-            
+            var authResult = await _authService.UserIsGroupChatAdmin(userId, groupChatId);
+            if (!authResult.IsSuccess)
+            {
+                return Unauthorized(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = "You must be admin to delete a chat"
+                });
+            }
 
-            throw new NotImplementedException(); // need to implement the service method first
+            var deleteResult = await _groupChatService.DeleteGroupChat(groupChatId);
+            if (deleteResult.IsSuccess)
+            {
+                return Ok(new RequestResponse
+                {
+                    IsSuccess = true,
+                    Message = deleteResult.Message
+                });
+            }
+            else
+            {
+                return BadRequest(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = deleteResult.Message
+                });
+            }
+        }
+
+        [HttpDelete("{groupChatid}/members/{memberId}")]
+        public async Task<ActionResult<RequestResponse>> RemoveMemberFromGroupChat([FromRoute] Guid groupChatId, [FromRoute] Guid memberId)
+        {
+            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            //var isSelfAction = _authService.IsSelfActionOnGroupChat(userId, memberId, groupChatId);
+            var userStatusResult = await _authService.GetGroupChatAuthStatus(userId, memberId, groupChatId);
+
+            if (userStatusResult.IsSelfAction)
+            {
+                var selfRemoveResult = await _groupChatService.RemoveSelfFromGroupChat(groupChatId, userId, userStatusResult.IsAdmin);
+                if (selfRemoveResult.IsSuccess)
+                {
+                    return Ok(new RequestResponse
+                    {
+                        IsSuccess = true,
+                        Message = selfRemoveResult.Message
+                    });
+                }
+                else
+                {
+                    return BadRequest(new RequestResponse
+                    {
+                        IsSuccess = false,
+                        Message = selfRemoveResult.Message
+                    });
+                }
+            }
+            else if (userStatusResult.IsAdmin) // user is admin and removing other user
+            {
+                var removeOtherResult = await _groupChatService.RemoveOtherUserFromGroupChat(groupChatId, memberId);
+                if (removeOtherResult.IsSuccess)
+                {
+                    return Ok(new RequestResponse
+                    {
+                        IsSuccess = true,
+                        Message = removeOtherResult.Message
+                    });
+                }
+                else
+                {
+                    return BadRequest(new RequestResponse
+                    {
+                        IsSuccess = false,
+                        Message = removeOtherResult.Message
+                    });
+                }
+            }
+            else // not self action and not admin
+            {
+                return Unauthorized(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = "You must be admin to remove other members from a chat"
+                });
+            }
+        }
+
+        [HttpPatch("{groupChatid}/members/{memberId}")]
+        public async Task<ActionResult<RequestResponse>> ChangeGroupChatAdmin([FromRoute] Guid groupChatId, [FromRoute] Guid memberId)
+        {
+            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            var authResult = await _authService.UserIsGroupChatAdmin(userId, groupChatId);
+            if (!authResult.IsSuccess)
+            {
+                return Unauthorized(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = "You must be admin to change the admin of a chat"
+                });
+            }
+
+            var changeAdminResult = await _groupChatService.ChangeGroupChatAdmin(groupChatId, memberId);
+            if (changeAdminResult.IsSuccess)
+            {
+                return Ok(new RequestResponse
+                {
+                    IsSuccess = true,
+                    Message = changeAdminResult.Message
+                });
+            }
+            else
+            {
+                return BadRequest(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = changeAdminResult.Message
+                });
+            }
         }
     }
 }

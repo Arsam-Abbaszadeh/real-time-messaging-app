@@ -12,11 +12,6 @@ namespace realTimeMessagingWebApp.Services
     {
         private readonly Context _context = context;
 
-        public Task<ServiceResult> CreateNewUser(User user)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<ServiceResult> CreateNewUser(User user, string password)
         {
             _ = user ?? throw new ArgumentNullException(nameof(user));// should never really happen
@@ -34,7 +29,7 @@ namespace realTimeMessagingWebApp.Services
             user.SignUpDate = DateTime.Now;
             user.PasswordHash = AuthUtils.HashPassword(password);
 
-            _context.Add(user);
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
             return new ServiceResult
@@ -46,7 +41,6 @@ namespace realTimeMessagingWebApp.Services
 
         public async Task<ServiceResult> LoginUser(string userName, string password)
         {
-            if (userName is null) throw new ArgumentNullException(nameof(userName)); // should never really happen and a bit random
             var loginUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == userName);
             if (loginUser is null)
             {
@@ -60,9 +54,6 @@ namespace realTimeMessagingWebApp.Services
             if (AuthUtils.VerifyHashedPassword(loginUser.PasswordHash, password) == PasswordVerificationResult.Success) 
             {
                 // At this point the user should be logged, which means I am going to need some auth utils for JWT and stored Auth tokens either in in-memory cache, redis or postgres
-                // TODO implement auth services
-
-                // For now just return success service
                 return new ServiceResult
                 {
                     IsSuccess = true,

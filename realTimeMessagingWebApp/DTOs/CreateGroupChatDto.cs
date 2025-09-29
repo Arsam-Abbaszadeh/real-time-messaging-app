@@ -9,7 +9,7 @@ namespace realTimeMessagingWebApp.DTOs
         [Required]
         public string GroupChatName { get; set; }
 
-        public ICollection<User> GroupChatMembers { get; set; } = new HashSet<User>();
+        public ICollection<Guid> GroupChatMembers { get; set; } = new HashSet<Guid>();
 
         public GroupChatType GroupChatType { get; set; } // I dont like how this needs to be synced across
 
