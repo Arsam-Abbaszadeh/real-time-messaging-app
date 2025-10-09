@@ -1,0 +1,16 @@
+meta {
+  name: remove self from GC
+  type: http
+  seq: 11
+}
+
+delete {
+  url: http://localhost:5231/api/Chat/ae7a08cb-af5f-47f7-be2f-cebcae3cd0e3/members/34a79314-6667-4d9f-883c-4e86d3c190c0
+  body: none
+  auth: inherit
+}
+
+headers {
+  accept: text/plain
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJSZWFsVGltZU1lc3NhZ2luZ1dlYkFwcFVzZXJzIiwiaXNzIjoiUmVhbFRpbWVNZXNzYWdpbmdXZWJBcHAiLCJleHAiOjE3NTk4OTExMTksImlkIjoiZDhkM2FiMzAtM2ZkNi00OGFkLWIwNDItYzEyOGI1Y2NmMWZiIiwidXNlcm5hbWUiOiJ0ZXN0MyIsImlhdCI6MTc1OTg5MDUyMCwibmJmIjoxNzU5ODkwNTIwfQ.TTLdjzpi3ubmfoDppI9SP3LjWMIZiUAASYV-Fn3vL6k
+}

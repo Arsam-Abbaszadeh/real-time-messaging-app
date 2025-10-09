@@ -1,0 +1,16 @@
+meta {
+  name: change gc admin
+  type: http
+  seq: 8
+}
+
+patch {
+  url: http://localhost:5231/api/Chat/ae7a08cb-af5f-47f7-be2f-cebcae3cd0e3/members/d8d3ab30-3fd6-48ad-b042-c128b5ccf1fb
+  body: none
+  auth: inherit
+}
+
+headers {
+  accept: text/plain
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJSZWFsVGltZU1lc3NhZ2luZ1dlYkFwcFVzZXJzIiwiaXNzIjoiUmVhbFRpbWVNZXNzYWdpbmdXZWJBcHAiLCJleHAiOjE3NTk4OTE3NjksImlkIjoiMzRhNzkzMTQtNjY2Ny00ZDlmLTg4M2MtNGU4NmQzYzE5MGMwIiwidXNlcm5hbWUiOiJ0ZXN0MSIsImlhdCI6MTc1OTg5MTE2OSwibmJmIjoxNzU5ODkxMTY5fQ.ht7K-R0c4lH8G7yIXeolo1ISCLBo7O92ZsB53dTRN-Y
+}

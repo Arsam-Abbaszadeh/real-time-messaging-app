@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using realTimeMessagingWebApp.Data;
+using realTimeMessagingWebApp.Data.Repository;
+using realTimeMessagingWebApp.Entities;
 using realTimeMessagingWebApp.Services;
+using realTimeMessagingWebApp.Services.ResponseModels;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,8 +17,13 @@ builder.Services.AddDbContext<Context>(options => options.UseNpgsql(connectionSt
 // Add services to the container
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddControllers();
+builder.Services.AddScoped<IGroupChatService, GroupChatService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IFriendShipRequestService, FriendShipRequestService>();
+builder.Services.AddScoped<ICustomRepository<GroupChat>, GroupChatRepositry>();
+builder.Services.AddScoped<RelationShipService>();
 
+builder.Services.AddControllers();
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -27,7 +35,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            ClockSkew = TimeSpan.Zero // idk what this does either
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(45) // small buffer
         };
     });
 

@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using realTimeMessagingWebApp.DTOs;
-using realTimeMessagingWebApp.DtoMappers;
-using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
 using realTimeMessagingWebApp.DTOMappers;
-using System.Reflection.Metadata.Ecma335;
+using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebApp.Services;
 
 namespace realTimeMessagingWebApp.Controllers
 {
@@ -17,23 +15,15 @@ namespace realTimeMessagingWebApp.Controllers
         private readonly IGroupChatService _groupChatService = groupChatService;
         private readonly IAuthService _authService = authService;
 
+        [Authorize]
         [HttpPost("newchat")]
         public async Task<ActionResult<RequestResponse>> CreateNewGroupChat([FromBody] CreateGroupChatDto groupChatDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new RequestResponse
-                {
-                    IsSuccess = false,
-                    Message = "Invalid data"
-                });
-            }
-
             var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
             var userId = Guid.Parse(userIdString!); // should not be null if token is validated
 
             var newGroupChat = GroupChatDtoMappers.ToGroupChatEntity(groupChatDto);
-            var groupChatResult = await _groupChatService.CreateAndAddMembersToGroupChat(newGroupChat, userId, groupChatDto.GroupChatMembers);
+            var groupChatResult = await _groupChatService.CreateAndAddMembersToGroupChat(newGroupChat, userId, groupChatDto.Admin, groupChatDto.GroupChatMembers);
 
             if (groupChatResult.IsSuccess)
             {
@@ -54,6 +44,45 @@ namespace realTimeMessagingWebApp.Controllers
             }
         }
 
+        [Authorize]
+        [HttpPost("{groupChatId}")]
+        public async Task<ActionResult<RequestResponse>> AddMembersToGroupChat([FromRoute] Guid groupChatId, [FromBody] ICollection<Guid> newMemberIds)
+        {
+            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            var authResult = await _authService.UserIsGroupChatAdmin(userId, groupChatId);
+
+            if (!authResult.IsSuccess)
+            {
+                return Unauthorized(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = "You must be admin to add members to a chat"
+                });
+            }
+
+            var addMembersResult = await _groupChatService.AddUsersToGroupChat(groupChatId, newMemberIds);
+            if (addMembersResult.IsSuccess)
+            {
+                return Ok(new RequestResponse
+                {
+                    IsSuccess = true,
+                    Message = addMembersResult.Message
+                });
+            }
+            else
+            {
+                return BadRequest(new RequestResponse
+                {
+                    IsSuccess = false,
+                    Message = addMembersResult.Message
+                });
+            }
+        }
+
+
+        // Fix to only assign group members as admins not just friends
+        [Authorize]
         [HttpDelete("{groupChatId}")]
         public async Task<ActionResult<RequestResponse>> DeleteGroupChat([FromRoute] Guid groupChatId)
         {
@@ -89,6 +118,7 @@ namespace realTimeMessagingWebApp.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{groupChatid}/members/{memberId}")]
         public async Task<ActionResult<RequestResponse>> RemoveMemberFromGroupChat([FromRoute] Guid groupChatId, [FromRoute] Guid memberId)
         {
@@ -147,6 +177,7 @@ namespace realTimeMessagingWebApp.Controllers
             }
         }
 
+        [Authorize]
         [HttpPatch("{groupChatid}/members/{memberId}")]
         public async Task<ActionResult<RequestResponse>> ChangeGroupChatAdmin([FromRoute] Guid groupChatId, [FromRoute] Guid memberId)
         {

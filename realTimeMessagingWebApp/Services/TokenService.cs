@@ -14,7 +14,7 @@ namespace realTimeMessagingWebApp.Services
     public class TokenService(Context context, IConfiguration configuration)
     : ITokenService
     {
-        readonly IConfiguration _configuration = configuration; // service nopt registerd yet
+        readonly IConfiguration _configuration = configuration; // should defop change environment variables, but not everything needs to be in env vars some can be in app settings and in that figure out how to snapshot appsettings
         readonly Context _context = context;
 
         public async Task<AccessTokenResult> NewAccessToken(string refreshToken, DateTime expiration)

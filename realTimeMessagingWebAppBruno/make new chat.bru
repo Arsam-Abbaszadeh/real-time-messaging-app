@@ -1,16 +1,30 @@
 meta {
-  name: refresh access token
+  name: make new chat
   type: http
-  seq: 3
+  seq: 6
 }
 
-get {
-  url: http://localhost:5231/api/User/refreshaccesstokentoken
-  body: none
+post {
+  url: http://localhost:5231/api/Chat/newchat
+  body: json
   auth: inherit
 }
 
 headers {
+  accept: text/plain
+  Content-Type: application/json
   Cookie: refreshToken=UM08Ja%2FQRP5lgVSyTAUauIJmPLWge%2B306qXjSKsIy8g%3D
   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJSZWFsVGltZU1lc3NhZ2luZ1dlYkFwcFVzZXJzIiwiaXNzIjoiUmVhbFRpbWVNZXNzYWdpbmdXZWJBcHAiLCJleHAiOjE3NTk4ODE3MDAsImlkIjoiZDhkM2FiMzAtM2ZkNi00OGFkLWIwNDItYzEyOGI1Y2NmMWZiIiwidXNlcm5hbWUiOiJ0ZXN0MyIsImlhdCI6MTc1OTg4MTEwMiwibmJmIjoxNzU5ODgxMTAyfQ.5zSkpAlEMF94k8TTlsvjZ9jQ1NPgq_Io2POBTpnonFQ
+}
+
+body:json {
+  {
+    "groupChatName": "test3 chat",
+    "groupChatMembers": [
+      "34a79314-6667-4d9f-883c-4e86d3c190c0",
+      "a6663429-f6b7-44f8-9d61-086036c5326e"
+    ],
+    "groupChatType": 1,
+    "admin": null
+  }
 }

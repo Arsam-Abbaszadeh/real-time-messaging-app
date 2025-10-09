@@ -26,7 +26,7 @@ namespace realTimeMessagingWebApp.Services
                 };
             }
             user.UserId = Guid.NewGuid();
-            user.SignUpDate = DateTime.Now;
+            user.SignUpDate = DateTime.UtcNow;
             user.PasswordHash = AuthUtils.HashPassword(password);
 
             await _context.Users.AddAsync(user);

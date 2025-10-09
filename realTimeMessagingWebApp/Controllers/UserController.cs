@@ -27,11 +27,6 @@ namespace realTimeMessagingWebApp.Controllers
         [HttpPost("createnewuser")]
         public async Task<ActionResult<UserSummaryDto>> CreateNewUser([FromBody] CreateUserDto createUserDto)
         {
-            if (!ModelState.IsValid) 
-            {
-                return BadRequest(ModelState);
-            }
-
             var newUser = UserDtoMapper.ToUserEntity(createUserDto);
             var creationResult = await _userService.CreateNewUser(newUser, createUserDto.Password);
             if (!creationResult.IsSuccess) 
@@ -46,26 +41,21 @@ namespace realTimeMessagingWebApp.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<UserAccessResultDto>> LoginUser([FromBody] LoginUserDto loginUserDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var loginResult = await _userService.LoginUser(loginUserDto.UserName, loginUserDto.Password);
             if (loginResult.IsSuccess) 
             {
-                var refreshExpiration = DateTime.Now.AddDays(_configuration.GetValue<int>("Jwt:RefreshExpiration"));
+                var refreshExpiration = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:RefreshExpiration"));
                 var refreshToken = await _tokenService.NewRefreshToken((User)loginResult.Data, refreshExpiration);
 
                 Response.Cookies.Append(RefreshTokenName, refreshToken, new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
-                    Expires = DateTime.Now.AddHours(1),
+                    Expires = DateTime.UtcNow.AddHours(1),
                     SameSite = SameSiteMode.Lax // might be strict
                 });
 
-                var accessExpiration = DateTime.Now.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration")); // configure for UTC
+                var accessExpiration = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration")); // configure for UTC
                 var accessTokenResult = await _tokenService.NewAccessToken(refreshToken, accessExpiration);
 
 
@@ -89,11 +79,6 @@ namespace realTimeMessagingWebApp.Controllers
         [HttpGet("refreshaccesstokentoken")]
         public async Task<ActionResult<UserAccessResultDto>> RefreshAccessToken() 
         {
-            if (!ModelState.IsValid) // TODO could this be done with middleware instead?
-            {
-                return BadRequest(ModelState);
-            }
-
             var authHeaderStart = "Bearer "; // TODO should Bearer be included when we send cookie initially
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (authHeader == null || !authHeader.StartsWith(authHeaderStart))
@@ -118,7 +103,7 @@ namespace realTimeMessagingWebApp.Controllers
                     return Unauthorized("Refresh token is required to refresh access token");
                 }
 
-                var expiration = DateTime.Now.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration"));
+                var expiration = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration"));
                 var accessTokenResult = await _tokenService.NewAccessToken(refreshToken, expiration); //actually get user
 
                 try

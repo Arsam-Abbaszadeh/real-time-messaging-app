@@ -11,6 +11,7 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
         public async Task<ServiceResult> IsSelfActionOnGroupChat(Guid actionUserId, Guid targetUserId, Guid groupChatId)
         {
             var isMember = await _context.GroupChatConnectors
+                .AsNoTracking()
                 .AnyAsync(gcc => gcc.GroupChatId == groupChatId && gcc.UserId == actionUserId);
 
             var isSelf = actionUserId == targetUserId;
@@ -35,7 +36,9 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
         {
             // this is where you use cache first and then db second
 
-            var isAdmin = await _context.GroupChats.AnyAsync(gc => gc.GroupChatId == groupChatId && gc.GroupChatAdminId == adminId);
+            var isAdmin = await _context.GroupChats
+                .AsNoTracking()
+                .AnyAsync(gc => gc.GroupChatId == groupChatId && gc.GroupChatAdminId == adminId);
 
             if (isAdmin)
             {
@@ -50,7 +53,7 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
                 return new ServiceResult
                 {
                     IsSuccess = false,
-                    Message = "User is not admin of the group chat"
+                    Message = "User is not admin of the group chat (the group chat might not exist)"
                 };
             }
         }
@@ -58,6 +61,7 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
         public async Task<ServiceResult> UserIsGroupChatMember(Guid memberId, Guid groupChatId)
         {
             var isMember = await _context.GroupChatConnectors
+                .AsNoTracking()
                 .AnyAsync(gcc => gcc.GroupChatId == groupChatId && gcc.UserId == memberId);
 
             if (isMember)
@@ -82,6 +86,7 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
         {
             // Single query to check admin status
             var isAdmin = await _context.GroupChats
+                .AsNoTracking()
                 .AnyAsync(gc => gc.GroupChatId == groupChatId && gc.GroupChatAdminId == userId);
 
             // If admin, they're automatically a member - no DB query needed

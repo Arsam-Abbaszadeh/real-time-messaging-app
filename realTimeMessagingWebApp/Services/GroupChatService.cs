@@ -1,85 +1,71 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.IdentityModel.Tokens.Experimental;
 using realTimeMessagingWebApp.Data;
+using realTimeMessagingWebApp.Data.Repository;
 using realTimeMessagingWebApp.Entities;
 using realTimeMessagingWebApp.Enums;
 using realTimeMessagingWebApp.Services.ResponseModels;
 
 namespace realTimeMessagingWebApp.Services
 {
-    public class GroupChatService(Context dBcontext) : IGroupChatService
+    public class GroupChatService(
+        Context dBcontext,
+        ICustomRepository<GroupChat> customRepository,
+        RelationShipService relationShipService)
+        : IGroupChatService
     {
-        private readonly Context _context = dBcontext ?? throw new InvalidOperationException($"Could not inject {nameof(Context)}");
+        readonly Context _context = dBcontext ?? throw new InvalidOperationException($"Could not inject {nameof(Context)}");
+        readonly ICustomRepository<GroupChat> _customRepository = customRepository ?? throw new InvalidOperationException($"Could not inject {nameof(ICustomRepository<GroupChat>)}");
+        readonly RelationShipService _relationShipService = relationShipService ?? throw new InvalidOperationException($"Could not inject {nameof(RelationShipService)}");
 
-        public async Task<ServiceResult> AddUserToGroupChat(GroupChat groupChat, Guid memberId) // expects a valid group chat and user entity
+        public async Task<ServiceResult> AddUserToGroupChat(Guid groupChatId, Guid memberId) 
+            => await AddUsersToGroupChat(groupChatId, [memberId]);
+
+        public async Task<ServiceResult> AddUsersToGroupChat(Guid groupChatId, ICollection<Guid> memberIds)
         {
-            var isExistingMember = await _context.GroupChatConnectors
-            .AnyAsync(gcc => gcc.GroupChatId == groupChat.GroupChatId && gcc.UserId == memberId);
-
-            if (isExistingMember)
+            var actualGroupChat = await _customRepository.GetFullEntityAsync(_context, groupChatId, true, gc => gc.GroupChatMembers);
+            if (actualGroupChat is null)
             {
                 return new ServiceResult
                 {
                     IsSuccess = false,
-                    Message = $"User {memberId} is already a member of group chat {groupChat.GroupChatName}",
+                    Message = $"Group chat with ID {groupChatId} not found",
                 };
             }
 
-            var areFriends = await _context.FriendShips.AnyAsync(fs =>
-                (fs.UserBId == groupChat.GroupChatAdminId && memberId == fs.UserAId) ||
-                (fs.UserAId == groupChat.GroupChatAdminId && memberId == fs.UserBId));
-
-            if (areFriends)
-            {
-                // must use connector table for this
-                var connector = new GroupChatConnector
-                {
-                    GroupChatConnectorId = Guid.NewGuid(),
-                    GroupChatId = groupChat.GroupChatId,
-                    UserId = memberId,
-                    JoinDate = DateTime.UtcNow
-                };
-
-                await _context.GroupChatConnectors.AddAsync(connector);
-                await _context.SaveChangesAsync();
-
-                return new ServiceResult
-                {
-                    IsSuccess = true,
-                    Message = $"User with ID {memberId} added to group chat {groupChat.GroupChatName} successfully",
-                    Data = groupChat // do we need to return the whole group chat entity here?
-                };
-            }
-            else
-            {
-                return new ServiceResult
-                {
-                    IsSuccess = false,
-                    Message = $"User with ID {memberId} is not a friend of the group chat creator and cannot be added",
-                };
-            }
-        }
-
-        public async Task<ServiceResult> AddUsersToGroupChat(GroupChat groupChat, ICollection<Guid> memberIds)
-        {
-            await _context.Entry(groupChat).Collection(gc => gc.GroupChatMembers).LoadAsync();
-            
-            var existingMembers = groupChat.GroupChatMembers.Select(m => m.UserId).Intersect(memberIds).ToList();
+            var existingMembers = actualGroupChat.GroupChatMembers.Select(m => m.UserId).Intersect(memberIds).ToList();
             if (existingMembers.Count != 0)
             {
                 return new ServiceResult
                 {
                     IsSuccess = false,
-                    Message = $"Some users are already members of the group chat {groupChat.GroupChatName}",
+                    Message = $"Some users are already members of the group chat {actualGroupChat.GroupChatName}",
                 };
             }
+
+            var areAllFriends = memberIds.Count > 1 ?
+                await _relationShipService.AreAllFriendsOfUser(actualGroupChat.GroupChatAdminId, memberIds) :
+                await _relationShipService.AreFriends(actualGroupChat.GroupChatAdminId, memberIds.First());
+
+            if (!areAllFriends.IsSuccess)
+            {
+                return new ServiceResult
+                {
+                    IsSuccess = false,
+                    Message = "Not all users to be added are friends of the group chat creator",
+                    Data = null
+                };
+            }   
 
             foreach (var memberId in memberIds)
             {
                 var areFriends = await _context.FriendShips.AnyAsync(fs =>
-                    (fs.UserBId == groupChat.GroupChatCreatorId && memberId == fs.UserAId) ||
-                    (fs.UserAId == groupChat.GroupChatCreatorId && memberId == fs.UserBId));
+                    ((fs.UserBId == actualGroupChat.GroupChatAdminId && fs.UserAId == memberId) ||
+                    (fs.UserAId == actualGroupChat.GroupChatAdminId && fs.UserBId == memberId)) &&
+                    fs.Status == FriendShipStatus.Friends);
+
                 if (!areFriends)
                 {
                     _context.ChangeTracker.Clear(); // to avoid tracking issues
@@ -95,7 +81,7 @@ namespace realTimeMessagingWebApp.Services
                 var connector = new GroupChatConnector
                 {
                     GroupChatConnectorId = Guid.NewGuid(),
-                    GroupChatId = groupChat.GroupChatId,
+                    GroupChatId = groupChatId,
                     UserId = memberId,
                     JoinDate = DateTime.UtcNow
                 };
@@ -107,14 +93,25 @@ namespace realTimeMessagingWebApp.Services
             return new ServiceResult
             {
                 IsSuccess = true,
-                Message = $"All users added to group chat {groupChat.GroupChatName} successfully",
-                Data = groupChat // nave properties not updated here
+                Message = $"All users added to group chat {actualGroupChat.GroupChatName} successfully",
+                Data = actualGroupChat // not sure if we need to send this
             };
         }
 
         public async Task<ServiceResult> ChangeGroupChatAdmin(Guid groupChat, Guid memberId)
         {
             // assumes admin auth has been done
+
+            var isMember = await UserIsGroupChatMember(memberId, groupChat);
+            if (!isMember)
+            {
+                return new ServiceResult
+                {
+                    IsSuccess = false,
+                    Message = $"User with ID {memberId} is not a member of the group chat with ID {groupChat}",
+                };
+            }
+
             var rowsAffected = await _context.GroupChats
                 .Where(gc => gc.GroupChatId == groupChat)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(gc => gc.GroupChatAdminId, memberId));
@@ -137,23 +134,11 @@ namespace realTimeMessagingWebApp.Services
             }
         }
 
-        async Task<Guid> RandomlyDecideNewAdmin(Guid groupChatId, Guid excludingUserId)
-        {
-            var possibleAdmins = await _context.GroupChatConnectors
-                .Where(gcc => gcc.GroupChatId == groupChatId && gcc.UserId != excludingUserId)
-                .Select(gcc => gcc.UserId)
-                .ToListAsync();
-
-            var random = new Random();
-            int index = random.Next(possibleAdmins.Count);
-            return possibleAdmins[index];
-        }
-
         public async Task<ServiceResult> RemoveUserFromGroupChat(Guid groupChatId, Guid memberId, Guid selfId) // TODO should I be wrapping this in a try catch?
         {
             // assumes admin authentication is done elsewhere
             var countMemebers = await _context.GroupChatConnectors.CountAsync(gcc => gcc.GroupChatId == groupChatId);
-            
+
             if (countMemebers == 1)
             {
                 var deletionResult = await DeleteGroupChat(groupChatId);
@@ -178,7 +163,7 @@ namespace realTimeMessagingWebApp.Services
             var isSelf = memberId == selfId;
             if (isSelf)
             {
-                var nextAdminId = await RandomlyDecideNewAdmin(groupChatId, memberId);
+                var nextAdminId = await RandomlySelectOtherMember(groupChatId, memberId);
 
                 await _context.GroupChats
                     .Where(gc => gc.GroupChatId == groupChatId)
@@ -224,7 +209,7 @@ namespace realTimeMessagingWebApp.Services
             isAdmin = isAdmin ?? (await GetGroupChatAdmin(groupChatId)) == userId;
             if (isAdmin == true)
             {
-                var nextAdminId = await RandomlyDecideNewAdmin(groupChatId, userId);
+                var nextAdminId = await RandomlySelectOtherMember(groupChatId, userId);
                 await _context.GroupChats
                     .Where(gc => gc.GroupChatId == groupChatId)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(gc => gc.GroupChatAdminId, nextAdminId));
@@ -241,11 +226,6 @@ namespace realTimeMessagingWebApp.Services
             };
         }
 
-        async Task<Guid> GetGroupChatAdmin(Guid groupChatId)
-            => await _context.GroupChats
-                        .Where(gc => gc.GroupChatId == groupChatId)
-                        .Select(gc => gc.GroupChatAdminId)
-                        .FirstAsync();
 
         public async Task<ServiceResult> RemoveOtherUserFromGroupChat(Guid groupChatId, Guid memberId)
         {
@@ -270,45 +250,36 @@ namespace realTimeMessagingWebApp.Services
             };
         }
 
-        async Task<ServiceResult> CreateNewGroupChat(GroupChat groupChat)
+        public async Task<ServiceResult> CreateAndAddMembersToGroupChat(GroupChat groupChat, Guid creator, Guid? admin, ICollection<Guid> memberIds)
         {
-            // assumes many values are already set in the group chat entity
-            groupChat.CreationDate = DateTime.UtcNow;
-            groupChat.GroupChatAdminId = groupChat.GroupChatCreatorId;
-            groupChat.GroupChatId = Guid.NewGuid();
 
-            await _context.GroupChats.AddAsync(groupChat);
-            await _context.SaveChangesAsync();
-
-            return new ServiceResult
+            if (memberIds.Count > 1 && groupChat.ChatType == GroupChatType.DirectMessage)
             {
-                IsSuccess = true,
-                Message = $"Group chat {groupChat.GroupChatName} created successfully",
-                Data = groupChat // do we need to return the whole group chat entity here?
-            };
+                return new ServiceResult
+                {
+                    IsSuccess = false,
+                    Message = "Direct Message chats can only have one member",
+                };
+            }
 
-        }
-
-        public async Task<ServiceResult> CreateAndAddMembersToGroupChat(GroupChat groupChat, Guid admin, ICollection<Guid> memberIds)
-        {
-            var groupChatCreationResult = await CreateNewGroupChat(groupChat);
+            var groupChatCreationResult = await CreateNewGroupChat(groupChat, creator);
             if (!groupChatCreationResult.IsSuccess)
             {
                 return groupChatCreationResult; // return the failure result
             }
 
-            var adminChangeResult = await AssignGroupChatAdmin(groupChat.GroupChatId, admin);
+            var actualAdmin = admin ?? creator;
+            var adminChangeResult = await AssignGroupChatAdmin(groupChat.GroupChatId, actualAdmin);
             if (!adminChangeResult.IsSuccess)
             {
                 return adminChangeResult;
             }
 
+            var trackedGroupChar = (GroupChat)groupChatCreationResult.Data!; // should not be null if result creation result was succesful
 
             if (memberIds.Count > 0) // idk if this will every equal 0 but just in case
             {
-                var addMemeberResult = groupChat.ChatType == GroupChatType.DirectMessage
-                    ? await AddUserToGroupChat(groupChat, memberIds.First())
-                    : await AddUsersToGroupChat(groupChat, memberIds);
+                var addMemeberResult = await AddUsersToGroupChat(trackedGroupChar.GroupChatId, memberIds);
 
                 if (!addMemeberResult.IsSuccess)
                 {
@@ -319,10 +290,9 @@ namespace realTimeMessagingWebApp.Services
             return new ServiceResult
             {
                 IsSuccess = true,
-                Message = $"Group chat {groupChat.GroupChatName} created and members added successfully",
-                Data = groupChat // is reference type so should 
+                Message = $"Group chat: {trackedGroupChar.GroupChatName} created and members added successfully",
+                Data = trackedGroupChar // is reference type so should 
             };
-
         }
 
         public async Task<ServiceResult> DeleteGroupChat(Guid groupChatId)
@@ -342,16 +312,94 @@ namespace realTimeMessagingWebApp.Services
 
         public async Task<ServiceResult> AssignGroupChatAdmin(Guid groupChatId, Guid newAdminId)
         {
+
+            var isMember = UserIsGroupChatMember(newAdminId, groupChatId);
+            if (!isMember.Result)
+            {
+                return new ServiceResult
+                {
+                    IsSuccess = false,
+                    Message = $"User with Id {newAdminId} is not a member of group chat with Id {groupChatId} and cannot be assigned as admin"
+                };
+            }
+
             // assumes admin authentication is done elsewhere
-            await _context.GroupChats
+            var result = await _context.GroupChats // if result is greater 1 we should probs do a roll back or throw an error or something, idk even if its worth trying to do validation like though
                 .Where(gc => gc.GroupChatId == groupChatId)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(gc => gc.GroupChatAdminId, newAdminId));
+
+            if (result == 0)
+            {
+                return new ServiceResult
+                {
+                    IsSuccess = false,
+                    Message = $"User with Id {newAdminId} was not assigned as admin of group chat with Id {groupChatId}"
+                };
+            }
+            else // not great logic, doesnt account for more than 
+            {
+                return new ServiceResult
+                {
+                    IsSuccess = true,
+                    Message = $"User with ID {newAdminId} assigned as admin of group chat with ID {groupChatId} successfully",
+                };
+            }
+        }
+
+        #region Helpers
+
+        async Task<ServiceResult> CreateNewGroupChat(GroupChat groupChat, Guid creatorId)
+        {
+            // assumes many values are already set in the group chat entity
+            groupChat.CreationDate = DateTime.UtcNow;
+            groupChat.GroupChatAdminId = groupChat.GroupChatCreatorId;
+            groupChat.GroupChatId = Guid.NewGuid();
+            groupChat.GroupChatCreatorId = creatorId;
+            await _context.GroupChats.AddAsync(groupChat);
+
+            var connector = new GroupChatConnector
+            {
+                GroupChatConnectorId = Guid.NewGuid(),
+                GroupChatId = groupChat.GroupChatId,
+                UserId = creatorId,
+                JoinDate = groupChat.CreationDate
+            };
+            await _context.GroupChatConnectors.AddAsync(connector);
+
+            await _context.SaveChangesAsync();
 
             return new ServiceResult
             {
                 IsSuccess = true,
-                Message = $"User with ID {newAdminId} assigned as admin of group chat with ID {groupChatId} successfully",
+                Message = $"Group chat {groupChat.GroupChatName} created successfully",
+                Data = groupChat // do we need to return the whole group chat entity here?
             };
         }
+
+        async Task<Guid> GetGroupChatAdmin(Guid groupChatId)
+            => await _context.GroupChats
+                        .Where(gc => gc.GroupChatId == groupChatId)
+                        .Select(gc => gc.GroupChatAdminId)
+                        .FirstAsync();
+
+        async Task<bool> UserIsGroupChatMember(Guid memberId, Guid groupChatId)
+            => await _context.GroupChatConnectors
+                .AsNoTracking()
+                .AnyAsync(gcc => gcc.GroupChatId == groupChatId && gcc.UserId == memberId);
+
+        async Task<Guid> RandomlySelectOtherMember(Guid groupChatId, Guid excludingUserId)
+        {
+            var possibleAdmins = await _context.GroupChatConnectors
+                .Where(gcc => gcc.GroupChatId == groupChatId && gcc.UserId != excludingUserId)
+                .Select(gcc => gcc.UserId)
+                .ToListAsync();
+
+            var random = new Random();
+            int index = random.Next(possibleAdmins.Count);
+            return possibleAdmins[index];
+        }
+
+
+        # endregion
     }
 }
