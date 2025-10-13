@@ -24,6 +24,7 @@ builder.Services.AddScoped<ICustomRepository<GroupChat>, GroupChatRepositry>();
 builder.Services.AddScoped<RelationShipService>();
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
