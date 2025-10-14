@@ -32,7 +32,7 @@ public sealed class ChatHub(IAuthService authService) : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, roomName); // I dont think we need to return anything
     }
     public async Task LeaveChatAsync(string roomName)
-    {
+{
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
     }
 
