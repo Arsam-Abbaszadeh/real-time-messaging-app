@@ -22,6 +22,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFriendShipRequestService, FriendShipRequestService>();
 builder.Services.AddScoped<ICustomRepository<GroupChat>, GroupChatRepositry>();
 builder.Services.AddScoped<RelationShipService>();
+builder.Services.AddScoped<IMessageSequenceTrackerService, MessageSequenceTrackerService>(); // could I guess be singleton
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();

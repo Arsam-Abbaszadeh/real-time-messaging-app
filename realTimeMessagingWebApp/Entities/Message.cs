@@ -11,7 +11,7 @@
         public DateTime? EditedAt { get; set; } = null;
         public bool IsDeleted { get; set; } = false;
         public DateTime? DeletedAt { get; set; } = null;
-
+        public int SequenceNumber { get; set; }
         public byte[]? Image { get; set; } = null; // for image suppoert
 
         // Nav properties

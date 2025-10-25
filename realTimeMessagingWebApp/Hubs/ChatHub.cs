@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.SignalR;
 using realTimeMessagingWebApp.Services;
@@ -6,10 +7,13 @@ using realTimeMessagingWebApp.Services;
 namespace realTimeMessagingWebApp.Hubs;
 
 [Authorize] // idk if this requires sepperate setup in Program.cs
-public sealed class ChatHub(IAuthService authService) : Hub
+public sealed class ChatHub(IAuthService authService, IMessageSequenceTrackerService sequenceService) : Hub
 {
     readonly IAuthService _authService = authService;
-    readonly static Dictionary<string, HashSet<string>> _rooms = []; // roomName, connectionIds
+    readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead
+
+    readonly static ConcurrentDictionary<string, HashSet<string>> rooms = []; // roomName, connectionIds
+    readonly static ConcurrentDictionary<string, SemaphoreSlim> chatLocks = []; // roomName, semaphore
 
     public async Task JoinChatAsync(string roomName)
     {
@@ -23,25 +27,42 @@ public sealed class ChatHub(IAuthService authService) : Hub
             throw new HubException("You must be a member of the chat to join it");
         }
 
-        if (!_rooms.ContainsKey(roomName))
+        if (!rooms.TryGetValue(roomName, out HashSet<string>? value))
         {
-            _rooms[roomName] = new HashSet<string>();
+            value = [];
+            rooms[roomName] = value;
         }
 
-        _rooms[roomName].Add(Context.ConnectionId);
+        value.Add(Context.ConnectionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, roomName); // I dont think we need to return anything
     }
     public async Task LeaveChatAsync(string roomName)
-{
+    {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
     }
 
     public async Task SendMessageToChat(string roomName, string user, string message)
     {
-        if (!_rooms.ContainsKey(roomName) || !_rooms[roomName].Contains(Context.ConnectionId))
+        if (!rooms.TryGetValue(roomName, out HashSet<string>? value) || !value.Contains(Context.ConnectionId))
         {
             throw new HubException("You must join the chat before sending messages");
         }
-        await Clients.Group(roomName).SendAsync("ReceiveMessage", user, message);
+
+        var chatLock = chatLocks.GetOrAdd(roomName, _ => new SemaphoreSlim(1, 1));
+        try
+        {
+            var chatGuid = Guid.Parse(roomName);
+            var sequence = _sequenceService.GetNextSequenceNumber(chatGuid);
+            await Clients.Group(roomName).SendAsync("ReceiveMessage", user, message);
+
+            // add to kafka queue with sequence
+        }
+        finally
+        {
+            chatLock.Release();
+        }
     }
 }
+
+
+// actually lock messages now and then add kakfa and worker process to handle message saving and distribution
