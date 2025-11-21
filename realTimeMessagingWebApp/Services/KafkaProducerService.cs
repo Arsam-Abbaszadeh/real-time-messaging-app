@@ -8,4 +8,3 @@ public class KafkaProducerService : IKafkaProducerService
         throw new NotImplementedException();
     }
 }
-q

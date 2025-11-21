@@ -38,6 +38,7 @@ public sealed class ChatHub(IAuthService authService, IMessageSequenceTrackerSer
     }
     public async Task LeaveChatAsync(string roomName)
     {
+        rooms[roomName].Remove(Context.ConnectionId);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
     }
 
@@ -53,7 +54,7 @@ public sealed class ChatHub(IAuthService authService, IMessageSequenceTrackerSer
         {
             var chatGuid = Guid.Parse(roomName);
             var sequence = _sequenceService.GetNextSequenceNumber(chatGuid);
-            await Clients.Group(roomName).SendAsync("ReceiveMessage", user, message);
+            await Clients.Group(roomName).SendAsync("ReceiveMessage", user, message); // this is dealt with by front end
 
             // add to kafka queue with sequence
         }
