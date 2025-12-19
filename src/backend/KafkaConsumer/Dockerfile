@@ -26,3 +26,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "KafkaConsumer.dll"]
+
+# I have no idea what this is for - seems to be some VS thing
