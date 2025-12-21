@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using realTimeMessagingWebApp.Data;
+using realTimeMessagingWebAppData;
 
 #nullable disable
 
 namespace realTimeMessagingWebApp.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20250918101611_addedRefreshTokenTable")]
-    partial class addedRefreshTokenTable
+    [Migration("20250805112346_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,10 +37,10 @@ namespace realTimeMessagingWebApp.Migrations
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("GroupChatAdminId")
+                    b.Property<Guid?>("GroupChatAdmin")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("GroupChatCreatorId")
+                    b.Property<Guid>("GroupChatCreator")
                         .HasColumnType("uuid");
 
                     b.Property<string>("GroupChatName")
@@ -76,46 +76,17 @@ namespace realTimeMessagingWebApp.Migrations
                     b.ToTable("GroupChatConnectors");
                 });
 
-            modelBuilder.Entity("realTimeMessagingWebApp.Entities.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ExpirationUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("isValid")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RefreshTokens");
-                });
-
             modelBuilder.Entity("realTimeMessagingWebApp.Entities.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("passwordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("SignUpDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserName")
+                    b.Property<string>("userName")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -141,22 +112,6 @@ namespace realTimeMessagingWebApp.Migrations
                     b.Navigation("GroupChat");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("realTimeMessagingWebApp.Entities.RefreshToken", b =>
-                {
-                    b.HasOne("realTimeMessagingWebApp.Entities.User", "User")
-                        .WithMany("refreshTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("realTimeMessagingWebApp.Entities.User", b =>
-                {
-                    b.Navigation("refreshTokens");
                 });
 #pragma warning restore 612, 618
         }

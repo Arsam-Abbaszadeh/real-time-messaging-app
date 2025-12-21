@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.JsonWebTokens;
+//using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using realTimeMessagingWebApp.Data;
-using realTimeMessagingWebApp.Data.Repository;
-using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebAppData.Entities;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Services.ResponseModels;
 using System.Text;
+using realTimeMessagingWebAppData.Repository;
+using realTimeMessagingWebAppData;
+using realTimeMessagingWebAppData.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-// Connect db for context
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<Context>(options => options.UseNpgsql(connectionString));
 
-// Add services to the container
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddRealtimeMessagingWebAppContext(connectionString);
+
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGroupChatService, GroupChatService>();

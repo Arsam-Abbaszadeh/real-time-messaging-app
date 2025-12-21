@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using realTimeMessagingWebApp.Entities;
-using realTimeMessagingWebApp.Enums;
+using realTimeMessagingWebAppData.Enums;
 
 namespace realTimeMessagingWebApp.DTOs
 {

@@ -6,6 +6,6 @@
      
         public string Message { get; set; }
 
-        public object? Data { get; set; } // optional data field
+        public object? Data { get; set; } // optional data field, should make this generic later
     }
 }

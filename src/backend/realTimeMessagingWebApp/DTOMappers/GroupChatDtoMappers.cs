@@ -1,6 +1,5 @@
 ﻿using realTimeMessagingWebApp.DTOs;
-using realTimeMessagingWebApp.Entities;
-using realTimeMessagingWebApp.Enums;
+using realTimeMessagingWebAppData.Entities;
 
 namespace realTimeMessagingWebApp.DTOMappers
 {

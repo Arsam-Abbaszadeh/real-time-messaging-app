@@ -1,4 +1,4 @@
-﻿using realTimeMessagingWebApp.Entities;
+﻿using realTimeMessagingWebAppData.Entities;
 using realTimeMessagingWebApp.Services.ResponseModels;
 
 namespace realTimeMessagingWebApp.Services
@@ -15,6 +15,5 @@ namespace realTimeMessagingWebApp.Services
         public Task<TokenValidationServiceResult> ValidateAccessToken(string accessToken);
 
         public Task<string> NewRefreshToken(User user, DateTime expiration); // not sure what it needs to take in
-
     }
 }

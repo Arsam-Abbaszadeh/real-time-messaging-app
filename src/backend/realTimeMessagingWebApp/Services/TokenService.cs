@@ -1,13 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using realTimeMessagingWebApp.Data;
-using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebAppData.Entities;
 using realTimeMessagingWebApp.Services.ResponseModels;
-using System.ComponentModel;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using realTimeMessagingWebAppData;
 
 namespace realTimeMessagingWebApp.Services
 {

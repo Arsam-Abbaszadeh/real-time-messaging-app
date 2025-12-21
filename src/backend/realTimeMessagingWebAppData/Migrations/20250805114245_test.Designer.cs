@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using realTimeMessagingWebApp.Data;
+using realTimeMessagingWebAppData;
 
 #nullable disable
 
 namespace realTimeMessagingWebApp.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20250805112346_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250805114245_test")]
+    partial class test
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

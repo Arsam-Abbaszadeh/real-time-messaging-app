@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace realTimeMessagingWebApp.Data.Repository
+namespace realTimeMessagingWebAppData.Repository
 {
     public interface ICustomRepository<T>
     {

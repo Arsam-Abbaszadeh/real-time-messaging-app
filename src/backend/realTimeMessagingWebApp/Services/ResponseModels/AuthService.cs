@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using realTimeMessagingWebApp.Data;
-using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebAppData;
+using realTimeMessagingWebAppData.Entities;
 
 namespace realTimeMessagingWebApp.Services.ResponseModels
 {

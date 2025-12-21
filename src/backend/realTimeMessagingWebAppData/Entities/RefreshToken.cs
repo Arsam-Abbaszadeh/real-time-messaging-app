@@ -1,4 +1,4 @@
-﻿namespace realTimeMessagingWebApp.Entities
+﻿namespace realTimeMessagingWebAppData.Entities
 {
     public class RefreshToken
     {

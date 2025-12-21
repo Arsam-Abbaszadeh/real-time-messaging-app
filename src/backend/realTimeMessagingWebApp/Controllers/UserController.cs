@@ -4,9 +4,7 @@ using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.DtoMappers;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
-using realTimeMessagingWebApp.Entities;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using realTimeMessagingWebAppData.Entities;
 
 namespace realTimeMessagingWebApp.Controllers
 {

@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
-using realTimeMessagingWebApp.Data;
-using realTimeMessagingWebApp.Entities;
-using realTimeMessagingWebApp.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebAppData.Enums;
+using realTimeMessagingWebAppData;
 using realTimeMessagingWebApp.Services.ResponseModels;
 
 namespace realTimeMessagingWebApp.Services

@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.IdentityModel.Tokens.Experimental;
-using realTimeMessagingWebApp.Data;
-using realTimeMessagingWebApp.Data.Repository;
-using realTimeMessagingWebApp.Entities;
-using realTimeMessagingWebApp.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using realTimeMessagingWebAppData;
+using realTimeMessagingWebAppData.Repository;
+using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebAppData.Enums;
 using realTimeMessagingWebApp.Services.ResponseModels;
 
 namespace realTimeMessagingWebApp.Services

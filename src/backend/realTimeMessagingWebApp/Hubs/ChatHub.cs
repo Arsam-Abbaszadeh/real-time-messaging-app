@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.SignalR;
 using realTimeMessagingWebApp.Services;
 

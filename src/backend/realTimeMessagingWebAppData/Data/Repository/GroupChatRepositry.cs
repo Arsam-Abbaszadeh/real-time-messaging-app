@@ -1,20 +1,17 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using realTimeMessagingWebApp.Entities;
+using realTimeMessagingWebAppData.Entities;
 
-namespace realTimeMessagingWebApp.Data.Repository;
+namespace realTimeMessagingWebAppData.Repository;
 
-class GroupChatRepositry : ICustomRepository<GroupChat>
+public class GroupChatRepositry : ICustomRepository<GroupChat>
 {
     // Basic version, no including nav props
-    public async Task<GroupChat?> GetFullEntityAsync(Context context, Guid id, bool reload = true) 
-        => await GetInternalAsync(context, id, reload, Array.Empty<Expression<Func<GroupChat, object>>>());
+    public async Task<GroupChat?> GetFullEntityAsync(Context context, Guid id, bool reload = true)
+        => await GetInternalAsync(context, id, reload, []);
 
     // Dynamic includes version
-    public async Task<GroupChat?> GetFullEntityAsync(Context context, Guid id, bool reload = true, params Expression<Func<GroupChat, object>>[] includes) 
+    public async Task<GroupChat?> GetFullEntityAsync(Context context, Guid id, bool reload = true, params Expression<Func<GroupChat, object>>[] includes)
         => await GetInternalAsync(context, id, reload, includes);
 
     async Task<GroupChat?> GetInternalAsync(
@@ -33,16 +30,16 @@ class GroupChatRepositry : ICustomRepository<GroupChat>
                 return tracked.Entity;
             }
             // Detach so Includes execute against a clean query // what the hell is going on here
-            tracked.State = EntityState.Detached; 
+            tracked.State = EntityState.Detached;
         }
 
-        IQueryable<GroupChat> query = context.GroupChats; // requires explicit cast
+        var query = (IQueryable<GroupChat>)context.GroupChats; // requires explicit cast
 
         if (includes.Length > 0)
         {
-            foreach (var include in includes) 
+            foreach (var include in includes)
             {
-               query = query.Include(include);
+                query = query.Include(include);
             }
         }
 

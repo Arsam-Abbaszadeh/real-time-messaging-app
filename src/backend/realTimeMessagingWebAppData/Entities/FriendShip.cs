@@ -1,6 +1,6 @@
-﻿using realTimeMessagingWebApp.Enums;
+﻿using realTimeMessagingWebAppData.Enums;
 
-namespace realTimeMessagingWebApp.Entities
+namespace realTimeMessagingWebAppData.Entities
 {
     public class FriendShip
     {
