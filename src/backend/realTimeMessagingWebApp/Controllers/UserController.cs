@@ -4,7 +4,7 @@ using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.DtoMappers;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
-using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
 
 namespace realTimeMessagingWebApp.Controllers
 {

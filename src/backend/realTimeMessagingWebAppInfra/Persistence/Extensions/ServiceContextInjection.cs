@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using realTimeMessagingWebAppInfra.Persistence.Data;
 
-namespace realTimeMessagingWebAppData.Extensions;
+namespace realTimeMessagingWebAppInfra.Persistence.Extensions;
 
 public static class ServiceContextInjection
 {
@@ -13,5 +13,4 @@ public static class ServiceContextInjection
 
         return services;
     }
-
 }

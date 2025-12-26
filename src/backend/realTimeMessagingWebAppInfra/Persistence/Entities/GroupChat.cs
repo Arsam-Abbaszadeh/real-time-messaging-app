@@ -1,6 +1,6 @@
-﻿using realTimeMessagingWebAppData.Enums;
+﻿using realTimeMessagingWebAppInfra.Persistence.Enums;
 
-namespace realTimeMessagingWebAppData.Entities;
+namespace realTimeMessagingWebAppInfra.Persistence.Entities;
 
 public class GroupChat
 {

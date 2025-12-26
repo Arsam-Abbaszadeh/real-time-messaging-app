@@ -5,7 +5,7 @@ VisualStudioVersion = 18.0.11217.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "realTimeMessagingWebApp", "realTimeMessagingWebApp\realTimeMessagingWebApp.csproj", "{21C4A5CB-E8DD-48E2-925B-42CE4741C762}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "realTimeMessagingWebAppData", "realTimeMessagingWebAppData\realTimeMessagingWebAppData.csproj", "{4E96D47C-7956-4AAC-858D-30819ABCD713}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "realTimeMessagingWebAppInfra", "realTimeMessagingWebAppInfra\realTimeMessagingWebAppInfra.csproj", "{4E96D47C-7956-4AAC-858D-30819ABCD713}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaConsumer", "KafkaConsumer\KafkaConsumer.csproj", "{291B1E7B-BD93-47F0-BAD2-80F02EF92A03}"
 EndProject

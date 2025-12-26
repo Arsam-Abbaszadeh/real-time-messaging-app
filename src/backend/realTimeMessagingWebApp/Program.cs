@@ -1,17 +1,18 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-//using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebApp.Configurations;
+using realTimeMessagingWebApp.Hubs;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Services.ResponseModels;
-using System.Text;
-using realTimeMessagingWebAppData.Repository;
-using realTimeMessagingWebAppData;
-using realTimeMessagingWebAppData.Extensions;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
+using realTimeMessagingWebAppInfra.Persistence.Extensions;
+using realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+var configs = builder.Configuration;
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = configs.GetConnectionString("DefaultConnection");
 builder.Services.AddRealtimeMessagingWebAppContext(connectionString);
 
 builder.Services.AddScoped<IUserService, UserService>();
@@ -20,11 +21,16 @@ builder.Services.AddScoped<IGroupChatService, GroupChatService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFriendShipRequestService, FriendShipRequestService>();
 builder.Services.AddScoped<ICustomRepository<GroupChat>, GroupChatRepositry>();
-builder.Services.AddScoped<RelationShipService>();
 builder.Services.AddScoped<IMessageSequenceTrackerService, MessageSequenceTrackerService>(); // could I guess be singleton
+builder.Services.AddScoped<RelationShipService>();
+
+builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
+
+// consider configuring JWTs in and all other settings in general and then moving them to another method for a general add all configs extension
+builder.Services.Configure<KafkaConfigurations>(configs.GetSection(nameof(KafkaConfigurations)));
 
 builder.Services.AddControllers();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(); // consider adding options later, like try reconnection or whatever
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -38,6 +44,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(45) // small buffer
+        };
+
+        // auth validation for singalR, ONLY USE FOR SIGNALR, as JWT cant be sent in header for websockets (usually)
+        o.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var path = context.HttpContext.Request.Path;
+                var accessToken = context.Request.Query["access_token"];
+
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/Chat"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -58,6 +81,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHub<ChatHub>("/Chat"); // not fully sure how this connection works yet
 app.MapControllers();
 
 app.Run();

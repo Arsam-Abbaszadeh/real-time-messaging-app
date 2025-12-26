@@ -2,5 +2,5 @@
 
 public interface IMessageSequenceTrackerService
 {
-    public long GetNextSequenceNumber(Guid groupChatId);
+    public ulong GetNextSequenceNumber(Guid groupChatId);
 }

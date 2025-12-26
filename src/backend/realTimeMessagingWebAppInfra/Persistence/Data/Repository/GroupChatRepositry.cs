@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
 
-namespace realTimeMessagingWebAppData.Repository;
+namespace realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 
 public class GroupChatRepositry : ICustomRepository<GroupChat>
 {

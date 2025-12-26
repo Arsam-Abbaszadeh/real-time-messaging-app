@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\realTimeMessagingWebAppData\realTimeMessagingWebAppData.csproj" />
+    <ProjectReference Include="..\realTimeMessagingWebAppInfra\realTimeMessagingWebAppInfra.csproj" />
   </ItemGroup>
 	
 </Project>

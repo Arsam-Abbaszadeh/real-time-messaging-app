@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using realTimeMessagingWebAppData;
+using realTimeMessagingWebAppInfra.Persistence.Data;
 
 #nullable disable
 
 namespace realTimeMessagingWebApp.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20251002215643_new migratio")]
-    partial class newmigratio
+    [Migration("20250929224351_Add message and friendship tables")]
+    partial class Addmessageandfriendshiptables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,7 +1,6 @@
-﻿namespace realTimeMessagingWebApp.DTOs
+﻿namespace realTimeMessagingWebApp.DTOs;
+
+public class NewFriendRequestDto
 {
-    public class NewFriendRequestDto
-    {
-        public Guid Friendid { get; set; }
-    }
+    public Guid Friendid { get; set; }
 }

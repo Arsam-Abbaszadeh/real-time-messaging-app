@@ -7,9 +7,10 @@
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" />
         <PackageReference Include="Swashbuckle.AspNetCore" />
+		<PackageReference Include="AWSSDK.S3" />
     </ItemGroup>
 	
     <ItemGroup>
-      <ProjectReference Include="..\realTimeMessagingWebAppData\realTimeMessagingWebAppData.csproj" />
+      <ProjectReference Include="..\realTimeMessagingWebAppInfra\realTimeMessagingWebAppInfra.csproj" />
     </ItemGroup>
 </Project>

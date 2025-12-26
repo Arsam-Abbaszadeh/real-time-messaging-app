@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using realTimeMessagingWebApp.Auth;
-using realTimeMessagingWebAppData;
-using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebAppInfra.Persistence.Data;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebApp.Services.ResponseModels;
 using System.Reflection;
 

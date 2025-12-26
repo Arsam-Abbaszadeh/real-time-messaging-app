@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
 using realTimeMessagingWebApp.DTOMappers;
 using realTimeMessagingWebApp.DTOs;
-using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebApp.Services;
 
 namespace realTimeMessagingWebApp.Controllers;

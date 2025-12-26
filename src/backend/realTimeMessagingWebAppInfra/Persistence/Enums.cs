@@ -1,4 +1,4 @@
-﻿namespace realTimeMessagingWebAppData.Enums;
+﻿namespace realTimeMessagingWebAppInfra.Persistence.Enums;
 
 public enum GroupChatType
 {

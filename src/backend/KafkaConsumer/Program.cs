@@ -1,8 +1,8 @@
 using KafkaConsumer;
-using realTimeMessagingWebAppData.Extensions;
+using realTimeMessagingWebAppInfra.Persistence.Extensions;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+builder.Services.AddHostedService<KafkaConsumerService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddRealtimeMessagingWebAppContext(connectionString);

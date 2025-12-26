@@ -1,11 +1,12 @@
-﻿namespace realTimeMessagingWebAppData.Entities;
+﻿namespace realTimeMessagingWebAppInfra.Persistence.Entities;
 
 public class User
 {
     public Guid UserId { get; set; }
     public string UserName { get; set; }
     public string PasswordHash { get; set; }
-
+    public string UserProfileKey { get; set; } = string.Empty;
+    public int UserProfileBucketKey { get; set; } // might be worth changin 
     public DateTime SignUpDate { get; set; }
     
     public ICollection<GroupChat> GroupChats { get; set; } = new HashSet<GroupChat>();

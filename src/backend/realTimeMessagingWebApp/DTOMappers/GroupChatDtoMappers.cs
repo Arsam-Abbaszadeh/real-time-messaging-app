@@ -1,5 +1,5 @@
 ﻿using realTimeMessagingWebApp.DTOs;
-using realTimeMessagingWebAppData.Entities;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
 
 namespace realTimeMessagingWebApp.DTOMappers
 {

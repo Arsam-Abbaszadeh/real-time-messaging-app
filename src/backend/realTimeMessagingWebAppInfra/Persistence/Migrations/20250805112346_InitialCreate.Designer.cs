@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using realTimeMessagingWebAppData;
+using realTimeMessagingWebAppInfra.Persistence.Data;
 
 #nullable disable
 
 namespace realTimeMessagingWebApp.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20250807081538_slightlyNewSchema")]
-    partial class slightlyNewSchema
+    [Migration("20250805112346_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -82,14 +82,11 @@ namespace realTimeMessagingWebApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("passwordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("SignUpDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserName")
+                    b.Property<string>("userName")
                         .IsRequired()
                         .HasColumnType("text");
 

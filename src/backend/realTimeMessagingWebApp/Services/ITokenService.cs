@@ -1,4 +1,4 @@
-﻿using realTimeMessagingWebAppData.Entities;
+﻿using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebApp.Services.ResponseModels;
 
 namespace realTimeMessagingWebApp.Services
