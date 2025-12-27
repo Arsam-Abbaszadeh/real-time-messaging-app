@@ -1,13 +1,18 @@
+
 namespace realTimeMessagingWebAppInfra.Configurations;
 
+#nullable disable
 public sealed class R2StorageOptions
 {
     public const string SectionName = "R2";
 
-    public string AccountId { get; set; } = string.Empty;
-    public string AccessKeyId { get; set; } = string.Empty;
-    public string SecretAccessKey { get; set; } = string.Empty;
-    public string BucketName { get; set; } = string.Empty;
-    public string PublicBaseUrl { get; set; } = string.Empty; // optional (CDN / public endpoint)
-    public string Region { get; set; } = "auto"; // R2 commonly uses "auto" for S3-compatible clients
+    public string AccountId { get; set; }
+    public string AccessKeyId { get; set; }
+    public string SecretAccessKey { get; set; }
+    public string BucketName { get; set; }
+    public string ServiceUrl => $"https://{AccountId}.r2.cloudflarestorage.com"; // verify actual URL
+
+    // Dont need em yet pre sure, TODO check if they are useful
+    //public string PublicBaseUrl { get; set; }// optional (CDN / public endpoint)
+    //public string Region { get; set; } = "auto"; // R2 commonly uses "auto" for S3-compatible clients
 }

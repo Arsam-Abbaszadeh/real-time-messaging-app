@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace realTimeMessagingWebAppInfra.Persistence.Data;
 
-public sealed class ContextDesignTimeFactory : IDesignTimeDbContextFactory<Context>
+sealed class ContextDesignTimeFactory : IDesignTimeDbContextFactory<Context>
 {
     public Context CreateDbContext(string[] args)
     {
