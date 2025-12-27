@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+      <UserSecretsId>f3bce544-1d29-4903-98af-ce9fc983725e</UserSecretsId>
+    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Confluent.Kafka" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />

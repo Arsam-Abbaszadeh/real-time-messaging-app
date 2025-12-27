@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<RootNamespace>realTimeMessagingWebAppInfra</RootNamespace>
+		<UserSecretsId>a8fc2fdd-4417-4ada-8245-67d20934f08f</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,5 +11,8 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" />
 	</ItemGroup>
 </Project>

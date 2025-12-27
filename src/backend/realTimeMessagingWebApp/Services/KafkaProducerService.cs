@@ -1,6 +1,7 @@
 ﻿
 using System.Text.Json;
 using Confluent.Kafka;
+using Microsoft.Extensions.Options;
 using realTimeMessagingWebApp.Configurations;
 using realTimeMessagingWebApp.DTOs;
 
@@ -12,10 +13,10 @@ public class KafkaProducerService : IKafkaProducerService, IAsyncDisposable
     readonly KafkaConfigurations _kafkaConfigurations;
     readonly int _flushTimeoutSeconds;
 
-    public KafkaProducerService(KafkaConfigurations kafkaConfigurations) // consider adding logger
+    public KafkaProducerService(IOptions<KafkaConfigurations> kafkaConfigurations) // consider adding logger
     {
-        _kafkaConfigurations = kafkaConfigurations;
-        _flushTimeoutSeconds = kafkaConfigurations.FlushTimeoutSeconds;
+        _kafkaConfigurations = kafkaConfigurations.Value;
+        _flushTimeoutSeconds = _kafkaConfigurations.FlushTimeoutSeconds;
         var config = new ProducerConfig
         {
             BootstrapServers = _kafkaConfigurations.Brokers,

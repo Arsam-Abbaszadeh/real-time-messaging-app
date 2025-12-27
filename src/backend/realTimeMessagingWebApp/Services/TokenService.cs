@@ -66,7 +66,7 @@ namespace realTimeMessagingWebApp.Services
             var refreshToken = await _context.RefreshTokens.Include(t => t.User).FirstOrDefaultAsync(t => t.Token == token); // might not be worth including user just for the sake of error message
             if (refreshToken is null)
             {
-                throw new InvalidOperationException("refresh token doesnt exist"); // idk if operation exception is the right one tbh
+                throw new ArgumentException("refresh token doesnt exist"); // idk if operation exception is the right one tbh
             }
 
             refreshToken.isValid = false;

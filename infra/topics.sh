@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# fix windows file paths when using MSYS2 to run bash scripts
 export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL="*"
 
@@ -19,7 +20,6 @@ create () {
       --topic '$topic'"
 }
 
-create "myproject.orders-created" 3
-create "myproject.email-send" 1
+create "userMessages" 1
 
 docker exec -i broker bash -lc "/opt/kafka/bin/kafka-topics.sh --bootstrap-server '$BOOTSTRAP' --list"

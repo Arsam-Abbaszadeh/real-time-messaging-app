@@ -10,6 +10,12 @@ using realTimeMessagingWebAppInfra.Persistence.Extensions;
 using realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>(optional: true);
+}
+
 var configs = builder.Configuration;
 
 var connectionString = configs.GetConnectionString("DefaultConnection");
@@ -21,13 +27,25 @@ builder.Services.AddScoped<IGroupChatService, GroupChatService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFriendShipRequestService, FriendShipRequestService>();
 builder.Services.AddScoped<ICustomRepository<GroupChat>, GroupChatRepositry>();
-builder.Services.AddScoped<IMessageSequenceTrackerService, MessageSequenceTrackerService>(); // could I guess be singleton
+builder.Services.AddScoped<IMessageSequenceTrackerService, MessageSequenceTrackerService>();
 builder.Services.AddScoped<RelationShipService>();
 
 builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
 
-// consider configuring JWTs in and all other settings in general and then moving them to another method for a general add all configs extension
-builder.Services.Configure<KafkaConfigurations>(configs.GetSection(nameof(KafkaConfigurations)));
+// might cleaner to add data annotations to the classes and use ValidateDataAnnotations() instead of individual validations
+builder.Services
+    .AddOptions<KafkaConfigurations>()
+    .Bind(configs.GetSection(KafkaConfigurations.SectionName))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Brokers), $"{KafkaConfigurations.SectionName}:Brokers is required.")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Topic), $"{KafkaConfigurations.SectionName}:Topic is required.")
+    .Validate(o => o.FlushTimeoutSeconds > 0, $"{KafkaConfigurations.SectionName}:FlushTimeoutSeconds must be > 0.")
+    .ValidateOnStart();
+
+builder.Services
+    .AddOptions<JwtCreationOptions>()
+    .Bind(configs.GetSection(JwtOptions.SectionName))
+    .Validate(o => o.AccessExpiration > 0, $"{JwtOptions.SectionName}:AccessExpiration must be > 0")
+    .Validate(o => o.RefreshExpiration > 0, $"{JwtOptions.SectionName}:RefreshExpiration must be > 0.");
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR(); // consider adding options later, like try reconnection or whatever
@@ -36,17 +54,19 @@ builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
-        o.RequireHttpsMetadata = false; // idk what htis does
+        var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
+                  ?? throw new InvalidOperationException("JWT configuration section is missing.");
+
+        o.RequireHttpsMetadata = false;
         o.TokenValidationParameters = new TokenValidationParameters
         {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromSeconds(45) // small buffer
+            ClockSkew = TimeSpan.FromSeconds(jwtOptions.ClockSkewSeconds)
         };
 
-        // auth validation for singalR, ONLY USE FOR SIGNALR, as JWT cant be sent in header for websockets (usually)
         o.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>

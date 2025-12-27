@@ -1,8 +1,15 @@
+using KafkaConsumer.Configurations;
+using Microsoft.Extensions.Options;
+
 namespace KafkaConsumer;
 
-public class KafkaConsumerService(ILogger<KafkaConsumerService> logger) : BackgroundService
+public class KafkaConsumerService(
+    ILogger<KafkaConsumerService> logger,
+    IOptions<KafkaConfigurations> kafkaConfigurations
+    ) : BackgroundService
 {
     readonly ILogger<KafkaConsumerService> _logger = logger;
+    readonly KafkaConfigurations _kafkaConfigurations = kafkaConfigurations.Value;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
