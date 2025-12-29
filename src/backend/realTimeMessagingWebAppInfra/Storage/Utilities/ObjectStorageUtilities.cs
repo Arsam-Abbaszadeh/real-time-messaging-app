@@ -1,6 +1,6 @@
 ﻿namespace realTimeMessagingWebAppInfra.Storage.Utilities;
 
-public static class ObjectStorageServiceUtilities
+public static class ObjectStorageUtilities
 {
     public static string GenerateObjectKeyForChatFile(Guid userId, Guid chatId, string fileExtension)
     {

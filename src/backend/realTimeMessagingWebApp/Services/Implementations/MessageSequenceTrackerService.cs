@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using realTimeMessagingWebAppInfra.Persistence.Data;
+﻿using realTimeMessagingWebAppInfra.Persistence.Data;
+using System.Collections.Concurrent;
 
 namespace realTimeMessagingWebApp.Services;
 

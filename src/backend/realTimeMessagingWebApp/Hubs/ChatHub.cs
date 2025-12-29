@@ -1,10 +1,12 @@
-﻿using System.Collections.Concurrent;
+﻿using realTimeMessagingWebAppInfra.Storage.Constants;
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using realTimeMessagingWebApp.Configurations;
 using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebAppInfra.Storage.Services;
+using realTimeMessagingWebAppInfra.Storage.Utilities;
 
 namespace realTimeMessagingWebApp.Hubs;
 
@@ -52,6 +54,23 @@ public sealed class ChatHub(
     {
         rooms[roomName].Remove(Context.ConnectionId);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
+    }
+
+    public async Task GetPreSignedUrlForChatImageUpload(ImageDetailsForObjectKeyDto imageDetails)
+    {
+        // can get image type
+        var objectKey = ObjectStorageUtilities.GenerateObjectKeyForChatFile(
+            imageDetails.UserId, imageDetails.ChatId, imageDetails.FileExtension);
+
+        var presignedUrl = await _objectStorageService.CreateObjectUrlForClientUploadAsync(
+            BucketKeys.Public, objectKey, imageDetails.FileType, imageDetails.UploadedAt);
+
+        await Clients.Clients(Context.ConnectionId)
+            .SendAsync("ReceivePreSignedUrlForChatImageUpload", new ImageAccessDetailsDto
+            {
+                PresignedUrl = presignedUrl,
+                ObjectKey = objectKey
+            });
     }
 
     // What the hell is the user argument

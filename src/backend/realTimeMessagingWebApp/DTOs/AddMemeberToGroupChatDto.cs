@@ -1,6 +1,6 @@
 ﻿namespace realTimeMessagingWebApp.DTOs;
 
-public class AddMemeberToGroupChatDto
+public record AddMemeberToGroupChatDto
 {
-    public Guid memberId;
+    public Guid MemberId { get; init; }
 }

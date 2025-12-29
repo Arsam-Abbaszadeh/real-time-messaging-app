@@ -1,10 +1,10 @@
 ﻿namespace realTimeMessagingWebApp.DTOs
 {
-    public class GroupChatSummaryDto
+    public record GroupChatSummaryDto
     {
-        public string GroupChatName { get; set; } = string.Empty;
-        public DateTime GroupChatCreationDate { get; set; }
+        public string GroupChatName { get; init; } = string.Empty;
+        public DateTime GroupChatCreationDate { get; init; }
 
-        public Guid GroupChatId { get; set; }
+        public Guid GroupChatId { get; init; }
     }
 }
