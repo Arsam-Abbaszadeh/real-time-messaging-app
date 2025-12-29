@@ -9,7 +9,6 @@ using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebAppInfra.Persistence.Extensions;
 using realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 using realTimeMessagingWebAppInfra.Storage.Extensions;
-using realTimeMessagingWebAppInfra.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +32,7 @@ builder.Services.AddScoped<IMessageSequenceTrackerService, MessageSequenceTracke
 builder.Services.AddScoped<RelationShipService>();
 
 builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
+builder.Services.RegisterObjectStorageServiceFromInfraSettings();
 
 // might cleaner to add data annotations to the classes and use ValidateDataAnnotations() instead of individual validations
 builder.Services
@@ -49,14 +49,7 @@ builder.Services
     .Validate(o => o.AccessExpiration > 0, $"{JwtOptions.SectionName}:AccessExpiration must be > 0")
     .Validate(o => o.RefreshExpiration > 0, $"{JwtOptions.SectionName}:RefreshExpiration must be > 0.");
 
-// cant be botherd with validation on this one
-builder.Services
-    .AddOptions<R2StorageOptions>()
-    .Bind(configs.GetSection(JwtOptions.SectionName));
 
-var r2Options = builder.Configuration.GetSection(R2StorageOptions.SectionName).Get<R2StorageOptions>()
-          ?? throw new InvalidOperationException("R2 Options section is missing.");
-builder.Services.RegisterObjectStorage(r2Options);
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR(); // consider adding options later, like try reconnection or whatever

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using realTimeMessagingWebApp.Configurations;
 using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Services;
+using realTimeMessagingWebAppInfra.Storage.Services;
 
 namespace realTimeMessagingWebApp.Hubs;
 
@@ -12,12 +13,14 @@ public sealed class ChatHub(
     IAuthService authService,
     IMessageSequenceTrackerService sequenceService,
     IKafkaProducerService kafkaProducerService,
+    IObjectStorageService ObjectStorageService,
     KafkaConfigurations KafkaConfigurations
 ) : Hub
 {
     readonly IAuthService _authService = authService;
     readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead
     readonly IKafkaProducerService _kafkaProducerService = kafkaProducerService;
+    readonly IObjectStorageService _objectStorageService = ObjectStorageService;
     readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations;
 
     readonly static ConcurrentDictionary<string, HashSet<string>> rooms = []; // roomName, connectionIds

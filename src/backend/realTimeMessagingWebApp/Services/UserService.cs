@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using realTimeMessagingWebApp.Auth;
 using realTimeMessagingWebAppInfra.Persistence.Data;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebApp.Services.ResponseModels;
 using System.Reflection;
+using realTimeMessagingWebApp.Utilities;
 
 namespace realTimeMessagingWebApp.Services
 {
@@ -27,7 +27,7 @@ namespace realTimeMessagingWebApp.Services
             }
             user.UserId = Guid.NewGuid();
             user.SignUpDate = DateTime.UtcNow;
-            user.PasswordHash = AuthUtils.HashPassword(password);
+            user.PasswordHash = AuthUtilities.HashPassword(password);
 
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
@@ -51,7 +51,7 @@ namespace realTimeMessagingWebApp.Services
                 };
             }
 
-            if (AuthUtils.VerifyHashedPassword(loginUser.PasswordHash, password) == PasswordVerificationResult.Success) 
+            if (AuthUtilities.VerifyHashedPassword(loginUser.PasswordHash, password) == PasswordVerificationResult.Success) 
             {
                 // At this point the user should be logged, which means I am going to need some auth utils for JWT and stored Auth tokens either in in-memory cache, redis or postgres
                 return new ServiceResult

@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace realTimeMessagingWebApp.Auth; // add my own namespace
+namespace realTimeMessagingWebApp.Utilities; // add my own namespace
 // This file is is copied from microsft identity auth
 
-public class AuthUtils
+public class AuthUtilities
 {
     public static string GenerateSecureToken(int tokenSize = 8)
     {

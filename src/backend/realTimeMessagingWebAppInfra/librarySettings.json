@@ -1,0 +1,8 @@
+{
+    "R2BucketOptions": {
+        "publicBucketUrlFormat": "https:////pub-{0}.r2.dev",
+        "RealTimeMessagingAppPublicBucketId": "6a25c8f7a45e43ed9458721a33f27aab",
+        "BucketUploadExpirationInMinutes": 5,
+        "PrivateBucketDownloadExpirationInHours":  24
+    }
+}
