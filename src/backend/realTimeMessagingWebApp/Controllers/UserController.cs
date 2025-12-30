@@ -5,19 +5,25 @@ using realTimeMessagingWebApp.DtoMappers;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
+using Microsoft.Extensions.Options;
+using realTimeMessagingWebApp.Configurations;
 
 namespace realTimeMessagingWebApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController(IUserService userService, ITokenService tokenService, IConfiguration configuration) : ControllerBase
+    public class UserController(
+        IUserService userService,
+        ITokenService tokenService,
+        IOptions<JwtCreationOptions> jwtOptions
+    ) : ControllerBase
     {
         // a controller for managing user
         // for instance when logged getting all the chats for this user
 
         readonly IUserService _userService = userService;
         readonly ITokenService _tokenService = tokenService;
-        readonly IConfiguration _configuration = configuration;
+        readonly JwtCreationOptions _jwtCreationOptions = jwtOptions.Value;
 
         const string RefreshTokenName = "refreshToken";
 
@@ -42,7 +48,7 @@ namespace realTimeMessagingWebApp.Controllers
             var loginResult = await _userService.LoginUser(loginUserDto.UserName, loginUserDto.Password);
             if (loginResult.IsSuccess) 
             {
-                var refreshExpiration = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:RefreshExpiration"));
+                var refreshExpiration = DateTime.UtcNow.AddDays(_jwtCreationOptions.RefreshExpiration);
                 var refreshToken = await _tokenService.NewRefreshToken((User)loginResult.Data, refreshExpiration);
 
                 Response.Cookies.Append(RefreshTokenName, refreshToken, new CookieOptions
@@ -53,7 +59,7 @@ namespace realTimeMessagingWebApp.Controllers
                     SameSite = SameSiteMode.Lax // might be strict
                 });
 
-                var accessExpiration = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration")); // configure for UTC
+                var accessExpiration = DateTime.UtcNow.AddMinutes(_jwtCreationOptions.AccessExpiration);
                 var accessTokenResult = await _tokenService.NewAccessToken(refreshToken, accessExpiration);
 
 
@@ -101,7 +107,7 @@ namespace realTimeMessagingWebApp.Controllers
                     return Unauthorized("Refresh token is required to refresh access token");
                 }
 
-                var expiration = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:AccessExpiration"));
+                var expiration = DateTime.UtcNow.AddMinutes(_jwtCreationOptions.AccessExpiration);
                 var accessTokenResult = await _tokenService.NewAccessToken(refreshToken, expiration); //actually get user
 
                 try
@@ -124,7 +130,7 @@ namespace realTimeMessagingWebApp.Controllers
             }
 
             // token validation failed
-            return Unauthorized("Access token is invalid" + (validationResult.message != null ? $": {validationResult.message}" : ""));
+            return Unauthorized("Access token is invalid" + (validationResult.message is not null ? $": {validationResult.message}" : ""));
         }
     }
 }

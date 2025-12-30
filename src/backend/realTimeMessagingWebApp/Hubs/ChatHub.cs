@@ -7,6 +7,7 @@ using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Services;
 using realTimeMessagingWebAppInfra.Storage.Services;
 using realTimeMessagingWebAppInfra.Storage.Utilities;
+using Microsoft.Extensions.Options;
 
 namespace realTimeMessagingWebApp.Hubs;
 
@@ -16,14 +17,14 @@ public sealed class ChatHub(
     IMessageSequenceTrackerService sequenceService,
     IKafkaProducerService kafkaProducerService,
     IObjectStorageService ObjectStorageService,
-    KafkaConfigurations KafkaConfigurations
+    IOptions<KafkaConfigurations> KafkaConfigurations
 ) : Hub
 {
     readonly IAuthService _authService = authService;
     readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead
     readonly IKafkaProducerService _kafkaProducerService = kafkaProducerService;
     readonly IObjectStorageService _objectStorageService = ObjectStorageService;
-    readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations;
+    readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations.Value;
 
     readonly static ConcurrentDictionary<string, HashSet<string>> rooms = []; // roomName, connectionIds
     readonly static ConcurrentDictionary<string, SemaphoreSlim> chatLocks = []; // roomName, semaphore
@@ -76,7 +77,7 @@ public sealed class ChatHub(
     // What the hell is the user argument
     public async Task SendMessageToChat(string roomName, string user, UserChatMessageRecieveDto messageContents) // add all the other data that needs to be sent by front end when tring to send a message
     {
-        if (!rooms.TryGetValue(roomName, out HashSet<string>? value) || !value.Contains(Context.ConnectionId))
+        if (!rooms.TryGetValue(roomName, out HashSet<string>? value) || (value is not null && !value.Contains(Context.ConnectionId)))
         {
             throw new HubException("You must join the chat before sending messages");
         }

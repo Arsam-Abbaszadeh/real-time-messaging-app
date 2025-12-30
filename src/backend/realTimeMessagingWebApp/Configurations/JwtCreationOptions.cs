@@ -1,7 +1,9 @@
 ﻿namespace realTimeMessagingWebApp.Configurations;
 
-public sealed class JwtCreationOptions
+public sealed class JwtCreationOptions : IConfigModel
 {
-    public required int RefreshExpiration { get; set; }
-    public required int AccessExpiration { get; set; }
+    public static string SectionName => "Jwt:JwtCreationOptions";
+
+    public required int RefreshExpiration { get; init; }
+    public required int AccessExpiration { get; init; }
 }

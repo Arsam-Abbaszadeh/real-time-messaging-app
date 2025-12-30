@@ -7,13 +7,14 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using realTimeMessagingWebAppInfra.Persistence.Data;
+using realTimeMessagingWebApp.Configurations;
+using Microsoft.Extensions.Options;
 
 namespace realTimeMessagingWebApp.Services;
 
-public class TokenService(Context context, IConfiguration configuration)
-: ITokenService
+public class TokenService(Context context, IOptions<JwtOptions> jwtOptions): ITokenService
 {
-    readonly IConfiguration _configuration = configuration; // should defop change environment variables, but not everything needs to be in env vars some can be in app settings and in that figure out how to snapshot appsettings
+    readonly JwtOptions _jwtOptions = jwtOptions.Value;
     readonly Context _context = context;
 
     public async Task<AccessTokenResult> NewAccessToken(string refreshToken, DateTime expiration)
@@ -113,14 +114,14 @@ public class TokenService(Context context, IConfiguration configuration)
 
     public async Task<TokenValidationServiceResult> ValidateAccessToken(string accessToken)
     {
-        string secretKey = _configuration["Jwt:SecretKey"];
+        string secretKey = _jwtOptions.SecretKey;
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         var handler = new JsonWebTokenHandler();
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidIssuer = _configuration["Jwt:Issuer"],
-            ValidAudience = _configuration["Jwt:Audience"],
+            ValidIssuer = _jwtOptions.Issuer,
+            ValidAudience = _jwtOptions.Audience,
             IssuerSigningKey = securityKey,
             ClockSkew = TimeSpan.Zero, // optional: to reduce the allowed clock skew time
             ValidateLifetime = true
@@ -153,8 +154,9 @@ public class TokenService(Context context, IConfiguration configuration)
 
     string GenerateAccessToken(User user, DateTime expiration)
     {
-        string secretKey = _configuration["Jwt:SecretKey"];
-        var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secretKey));
+        string secretKey = _jwtOptions.SecretKey;
+
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -167,8 +169,8 @@ public class TokenService(Context context, IConfiguration configuration)
             ]),
             Expires = expiration,
             SigningCredentials = credentials,
-            Issuer = _configuration["Jwt:Issuer"],
-            Audience = _configuration["Jwt:Audience"],
+            Issuer = _jwtOptions.Issuer,
+            Audience = _jwtOptions.Audience,
         };
 
         var handler = new JsonWebTokenHandler();

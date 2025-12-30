@@ -426,3 +426,72 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+############################################
+# Node / Frontend (do not commit)
+############################################
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Package manager caches / artifacts
+.pnpm-store/
+**/.pnp/
+**/.pnp.cjs
+**/.pnp.loader.mjs
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime / tool caches
+.cache/
+**/.cache/
+.parcel-cache/
+**/.parcel-cache/
+.eslintcache
+.stylelintcache
+.turbo/
+**/.turbo/
+.nx/
+**/.nx/
+.vite/
+**/.vite/
+
+# Test coverage
+coverage/
+**/coverage/
+.nyc_output/
+**/.nyc_output/
+
+# Build outputs (common frameworks/tools)
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.next/
+**/.next/
+.nuxt/
+**/.nuxt/
+.svelte-kit/
+**/.svelte-kit/
+storybook-static/
+**/storybook-static/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Env files (keep examples committed separately, e.g. .env.example)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Misc
+*.log

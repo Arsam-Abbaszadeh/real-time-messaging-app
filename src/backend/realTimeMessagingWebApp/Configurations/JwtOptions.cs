@@ -1,9 +1,8 @@
 namespace realTimeMessagingWebApp.Configurations;
 
-public sealed class JwtOptions
+public sealed class JwtOptions : IConfigModel
 {
-    public const string SectionName = "Jwt:JwtOptions";
-
+    public static string SectionName => "Jwt:JwtOptions";
     public required string SecretKey { get; init; }
     public required string Issuer { get; init; }
     public required string Audience { get; init; }
