@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace realTimeMessagingWebApp.Hubs;
 
-[Authorize] // idk if this requires sepperate setup in Program.cs
+[Authorize]
 public sealed class ChatHub(
     IAuthService authService,
     IMessageSequenceTrackerService sequenceService,
@@ -26,40 +26,46 @@ public sealed class ChatHub(
     readonly IObjectStorageService _objectStorageService = ObjectStorageService;
     readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations.Value;
 
-    readonly static ConcurrentDictionary<string, HashSet<string>> rooms = []; // roomName, connectionIds
-    readonly static ConcurrentDictionary<string, SemaphoreSlim> chatLocks = []; // roomName, semaphore
+    readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> rooms = []; // chatId, (signalR connectionIds, filler byte value)
+    readonly static ConcurrentDictionary<string, SemaphoreSlim> chatLocks = []; // chatId, semaphore
 
-    public async Task JoinChatAsync(string roomName)
+    public async Task JoinChatAsync(Guid chatId)
     {
-        var userIdString = Context.User?.Claims.First(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!); // should not be null if token is validated
-        var roomGuid = Guid.Parse(roomName);
-
-        var isMember = await _authService.UserIsGroupChatMember(userId, roomGuid);
-        if (!isMember.IsSuccess)
+        var strChatId = chatId.ToString();
+        if (!UserHasJoinedChat(strChatId))
         {
-            throw new HubException("You must be a member of the chat to join it"); // does this return a bad request type thing to the frontend?
-        }
+            var userIdString = Context.User?.Claims.First(c => c.Type == "id")?.Value;
+            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            var isMember = await _authService.UserIsGroupChatMember(userId, chatId);
+            if (!isMember.IsSuccess)
+            {
+                throw new HubException("You must be a member of the chat to join it"); // does this return a bad request type thing to the frontend?
+            }
 
-        if (!rooms.TryGetValue(roomName, out HashSet<string>? value))
-        {
-            value = [];
-            rooms[roomName] = value;
-        }
+            if (!rooms.TryGetValue(strChatId, out ConcurrentDictionary<string, byte>? value))
+            {
+                value = [];
+                rooms[strChatId] = value;
+            }
 
-        value.Add(Context.ConnectionId);
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
+            value.TryAdd(strChatId, 0);
+            await Groups.AddToGroupAsync(Context.ConnectionId, strChatId);
+        }
     }
 
-    public async Task LeaveChatAsync(string roomName)
+    public async Task LeaveChatAsync(Guid chatId)
     {
-        rooms[roomName].Remove(Context.ConnectionId);
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
+        var strChatId = chatId.ToString();
+        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to leave it");
+        rooms[strChatId].TryRemove(Context.ConnectionId, out _);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, strChatId);
     }
 
     public async Task GetPreSignedUrlForChatImageUpload(ImageDetailsForObjectKeyDto imageDetails)
     {
-        // can get image type
+        var chatId = imageDetails.ChatId.ToString();
+        ThrowIfUserNotInChat(chatId, "You must join the chat before trying to upload files to it");
+
         var objectKey = ObjectStorageUtilities.GenerateObjectKeyForChatFile(
             imageDetails.UserId, imageDetails.ChatId, imageDetails.FileExtension);
 
@@ -74,28 +80,44 @@ public sealed class ChatHub(
             });
     }
 
-    // What the hell is the user argument
-    public async Task SendMessageToChat(string roomName, string user, UserChatMessageRecieveDto messageContents) // add all the other data that needs to be sent by front end when tring to send a message
+    //What the hell is the user argument
+    public async Task SendMessageToChat(UserChatMessageRecieveDto messageContents) // add all the other data that needs to be sent by front end when tring to send a message
     {
-        if (!rooms.TryGetValue(roomName, out HashSet<string>? value) || (value is not null && !value.Contains(Context.ConnectionId)))
-        {
-            throw new HubException("You must join the chat before sending messages");
-        }
+        var chatId = messageContents.ChatId.ToString();
+        ThrowIfUserNotInChat(chatId, "You must join the chat before sending messages");
 
-        var chatLock = chatLocks.GetOrAdd(roomName, _ => new SemaphoreSlim(1, 1));
+        var chatLock = chatLocks.GetOrAdd(chatId, _ => new SemaphoreSlim(1, 1));
         await chatLock.WaitAsync();
         try
         {
-            var chatGuid = Guid.Parse(roomName);
-            var sequence = _sequenceService.GetNextSequenceNumber(chatGuid);
-            // dont think I need to be the entire message content to all users but no harm in sending a bit more data
-            await Clients.Group(roomName).SendAsync("ReceiveMessage", user, messageContents); // this is dealt with by front end
-            // This doesnte actually need to be done in the lock but code is easier to read this way
+            var sequence = _sequenceService.GetNextSequenceNumber(messageContents.ChatId);
+            var userId = Context.User?.Claims.First(c => c.Type == "id")?.Value;
+            //dont think I need to be the entire message content to all users but no harm in sending a bit more data
+            await Clients.Group(chatId).SendAsync("ReceiveMessage", userId, messageContents); // this is dealt with by front end
+            chatLock.Release();
             await _kafkaProducerService.ProduceAsync(_kafkaConfigurations.Topic, _kafkaConfigurations.Key, messageContents);
         }
         finally
         {
-            chatLock.Release();
+            if (chatLock.CurrentCount == 0)
+            {
+                chatLock.Release();
+            }
         }
     }
+
+    #region helpers
+    void ThrowIfUserNotInChat(string chatId, string errorMessage = "You must join the chat before performing this operation")
+    {
+        if (!UserHasJoinedChat(chatId))
+        {
+            throw new HubException(errorMessage);
+        }
+    }
+
+    bool UserHasJoinedChat(string chatId) 
+    {
+        return rooms.TryGetValue(chatId, out ConcurrentDictionary<string, byte>? value) || (value is not null && !value.ContainsKey(Context.ConnectionId));
+    }
+    #endregion
 }

@@ -2,7 +2,7 @@
 
 public record UserChatMessageRecieveDto
 {
-    public Guid GroupChatId { get; init; }
+    public Guid ChatId { get; init; }
     public Guid UserId { get; init; }
     public string MessageContent { get; init; } = string.Empty;
     public DateTime SentAt { get; init; }

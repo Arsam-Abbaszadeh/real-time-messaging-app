@@ -63,6 +63,7 @@ builder.Services.AddControllers();
 // consider adding options later, like try reconnection or whatever
 // Will probs need to add JSON serailzation options given we are using DTOs,
     // check out https://learn.microsoft.com/en-us/aspnet/core/signalr/configuration?view=aspnetcore-10.0&tabs=dotnet
+// may have to configure CORS, but idk yet
 builder.Services.AddSignalR(); 
 
 const string chatHubPath = "/chathub";
@@ -90,7 +91,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var path = context.HttpContext.Request.Path;
                 if (path.StartsWithSegments(chatHubPath))
                 {
-                    // Browser WebSockets/SSE commonly use this:
+                    // Browser WebSockets/SSE will put token in qurey param
+                    // HENCE, using a ticket based auth would be more secure as access token isnt logged and cached
                     var accessToken = context.Request.Query["access_token"].ToString();
                     if (!string.IsNullOrWhiteSpace(accessToken))
                     {
