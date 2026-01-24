@@ -28,7 +28,7 @@ namespace realTimeMessagingWebApp.Controllers
         const string RefreshTokenName = "refreshToken";
 
         // user CRUD endpoints
-        [HttpPost("createnewuser")]
+        [HttpPost("createaccount")]
         public async Task<ActionResult<UserSummaryDto>> CreateNewUser([FromBody] CreateUserDto createUserDto)
         {
             var newUser = UserDtoMapper.ToUserEntity(createUserDto);
@@ -43,9 +43,9 @@ namespace realTimeMessagingWebApp.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<UserAccessResultDto>> LoginUser([FromBody] LoginUserDto loginUserDto)
+        public async Task<ActionResult<LoginResponseDto>> LoginUser([FromBody] LoginUserDto loginUserDto)
         {
-            var loginResult = await _userService.LoginUser(loginUserDto.UserName, loginUserDto.Password);
+            var loginResult = await _userService.LoginUser(loginUserDto.Username, loginUserDto.Password);
             if (loginResult.IsSuccess) 
             {
                 var refreshExpiration = DateTime.UtcNow.AddDays(_jwtCreationOptions.RefreshExpiration);
@@ -63,15 +63,17 @@ namespace realTimeMessagingWebApp.Controllers
                 var accessTokenResult = await _tokenService.NewAccessToken(refreshToken, accessExpiration);
 
 
-                return Ok(new UserAccessResultDto
+                return Ok(new LoginResponseDto
                 {
                     IsSuccessful = true,
-                    Message = $"User {loginUserDto.UserName} logged in successfully",
-                    AccessToken = accessTokenResult.AccessToken
+                    Message = $"User {loginUserDto.Username} logged in successfully",
+                    AccessToken = accessTokenResult.AccessToken,
+                    UserId = ((User)loginResult.Data).UserId,
+                    AccessTokenExpiration = accessTokenResult.AccessTokenExpiration
                 });
             }
 
-            return Unauthorized(new UserAccessResultDto
+            return Unauthorized(new LoginResponseDto
             {
                 IsSuccessful = false,
                 Message = loginResult.Message
@@ -81,7 +83,7 @@ namespace realTimeMessagingWebApp.Controllers
         // actually test this idk if this endpoint works
 
         [HttpGet("refreshaccesstokentoken")]
-        public async Task<ActionResult<UserAccessResultDto>> RefreshAccessToken() 
+        public async Task<ActionResult<LoginResponseDto>> RefreshAccessToken() 
         {
             var authHeaderStart = "Bearer "; // TODO should Bearer be included when we send cookie initially
             var authHeader = Request.Headers.Authorization.FirstOrDefault();
@@ -114,11 +116,12 @@ namespace realTimeMessagingWebApp.Controllers
                 {
                      if (accessTokenResult.ValidRefreshToken)
                     {
-                        return Ok(new UserAccessResultDto
+                        return Ok(new LoginResponseDto
                         {
                             IsSuccessful = true,
                             Message = "new access token generated successfully",
-                            AccessToken = accessTokenResult.AccessToken
+                            AccessToken = accessTokenResult.AccessToken,
+                            AccessTokenExpiration = accessTokenResult.AccessTokenExpiration
                         });
                     }
 
@@ -128,7 +131,6 @@ namespace realTimeMessagingWebApp.Controllers
                     return Unauthorized(ex.Message);
                 }
             }
-
             // token validation failed
             return Unauthorized("Access token is invalid" + (validationResult.message is not null ? $": {validationResult.message}" : ""));
         }

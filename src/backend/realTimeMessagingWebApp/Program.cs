@@ -9,6 +9,7 @@ using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebAppInfra.Persistence.Extensions;
 using realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 using realTimeMessagingWebAppInfra.Storage.Extensions;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,7 +60,12 @@ builder.Services
     .Validate(o => o.ClockSkewSeconds >= 0, $"{JwtOptions.SectionName}:ClockSkewSeconds must be >= 0.")
     .ValidateOnStart();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // this is default setting I think but just want to be explicit
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 // consider adding options later, like try reconnection or whatever
 // Will probs need to add JSON serailzation options given we are using DTOs,
     // check out https://learn.microsoft.com/en-us/aspnet/core/signalr/configuration?view=aspnetcore-10.0&tabs=dotnet
@@ -113,6 +119,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// TODO learn more about this damn cors thing
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -121,6 +139,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors("AllowFrontend");
     app.UseSwagger();
     app.UseSwaggerUI();
 }

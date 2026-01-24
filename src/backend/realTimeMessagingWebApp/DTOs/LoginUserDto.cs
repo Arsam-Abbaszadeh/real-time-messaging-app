@@ -5,7 +5,7 @@ namespace realTimeMessagingWebApp.DTOs
     public record LoginUserDto
     {
         [Required]
-        public string UserName { get; init; }
+        public string Username { get; init; }
         [Required]
         public string Password { get; init; } // NOT password hash
 

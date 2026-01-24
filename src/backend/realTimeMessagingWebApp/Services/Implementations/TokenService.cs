@@ -29,7 +29,8 @@ public class TokenService(Context context, IOptions<JwtOptions> jwtOptions): ITo
                 {
                     AccessToken = newAccessToken,
                     ValidRefreshToken = true,
-                    Message = "New access token granted"
+                    Message = "New access token granted",
+                    AccessTokenExpiration = expiration // kind of just returning the input here but whatever
                 };
             }
 
