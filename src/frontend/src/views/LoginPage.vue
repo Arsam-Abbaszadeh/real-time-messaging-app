@@ -44,9 +44,11 @@
 <script setup lang="ts">
 import { ROUTE_NAMES } from '../utils/routeNames';
 import { computed, ref } from 'vue';
-import { requestlogin } from '../api/authRequests';
-import type { LoginRequestDto, LoginResponseDto } from '../api/dtos'; 
+// import { requestlogin } from '../api/authRequests';
+// import type { LoginRequestDto, LoginResponseDto } from '../api/dtos'; 
+import { useAuthStore } from '../stores/authStore';
 
+const authStore = useAuthStore();
 const username = ref('');
 const password = ref('');
 const errorMesage = ref('');
@@ -56,18 +58,10 @@ const disableSubmit = computed(() => {
 
 async function handleLogin() {
   errorMesage.value = '';
-  try {
-    const requestDto: LoginRequestDto = {
-      username: username.value,
-      password: password.value
-    };
-
-    const response: LoginResponseDto = await requestlogin(requestDto)
-    console.log(response)
-
-  } catch (e) {
-    // this means the login failed on the client
-    errorMesage.value = 'Login failed.';
+  const result = await authStore.login(username.value, password.value);
+  // error messages not being mapped
+  if (!result.success) {
+    errorMesage.value = result.message;
   }
 };
 

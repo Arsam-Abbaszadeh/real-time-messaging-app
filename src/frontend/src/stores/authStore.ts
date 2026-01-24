@@ -92,7 +92,7 @@ export const useAuthStore = defineStore("auth", () => {
                     message: error.message
                 } as authResult;
             }
-            
+
             return {
                 success: false,
                 message: 'An unexpected error occurred'

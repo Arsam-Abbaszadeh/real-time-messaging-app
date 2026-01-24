@@ -33,9 +33,17 @@ export async function fetchJson<TResponse>(
   const text = await response.text();
   const body = text ? safeJsonParse(text) : undefined;
 
-if (typeof body === 'string') {
-  throw new ApiError(`Got: "${body}"`, response.status);
-}
+  // Check for HTTP errors BEFORE checking body type
+  if (!response.ok) {
+    const errorMessage = typeof body === 'string' 
+      ? body 
+      : (body as any)?.message || response.statusText;
+    throw new ApiError(errorMessage, response.status, body);
+  }
+
+  if (typeof body === 'string') {
+    throw new ApiError(`Expected JSON but got: "${body}"`, response.status);
+  }
 
   return body as TResponse;
 }
