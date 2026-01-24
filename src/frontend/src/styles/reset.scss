@@ -26,6 +26,11 @@ img, picture, svg, video, canvas{
 
 input, button, textarea, select{
     font: inherit; 
+    
+}
+
+input:focus, button:focus, textarea:focus, select:focus{
+    outline: none;
 }
 
 [hidden]{

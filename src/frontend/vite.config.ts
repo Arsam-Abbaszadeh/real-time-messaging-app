@@ -10,6 +10,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    port: process.env.DEFAULT_FRONTEND_PORT ? parseInt(process.env.DEFAULT_FRONTEND_PORT) : 5173,
+    strictPort: true, // fail if 5173 is taken instead of auto-choosing another
+  },
   build: {
     sourcemap: true,
   },

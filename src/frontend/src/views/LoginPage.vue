@@ -1,13 +1,78 @@
 <template>
-<h1>
-    Login Page
-</h1>
-<RouterLink :to="{ name: ROUTE_NAMES.ACCOUNT }"> link to create acc</RouterLink>
+
+<div class="form-page">
+    <div class="form-wrapper">
+        <h1>Login</h1>
+        <form @submit.prevent="handleLogin" class="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input 
+                type="text" 
+                id="username" 
+                v-model="username" 
+                required 
+                placeholder="Enter your username"
+                class="form-text-input"
+                autocomplete="username"
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                type="password" 
+                id="password" 
+                v-model="password" 
+                required 
+                placeholder="Enter your password"
+                class="form-text-input"
+                autocomplete="password"
+                />
+            </div>
+            
+            <div class="form-submit-container">
+                <button type="submit" class="form-button" :disabled="disableSubmit">Login</button>
+                <div class="error-message">{{ errorMesage }}</div>
+            </div>
+        </form>
+        <RouterLink class="form-link" :to="{ name: ROUTE_NAMES.ACCOUNT }"> need an account? create account</RouterLink>
+    </div>
+</div>
 
 </template>
-
+  
 <script setup lang="ts">
 import { ROUTE_NAMES } from '../utils/routeNames';
+import { computed, ref } from 'vue';
+import { requestlogin } from '../api/authRequests';
+import type { LoginRequestDto, LoginResponseDto } from '../api/dtos'; 
 
+const username = ref('');
+const password = ref('');
+const errorMesage = ref('');
+const disableSubmit = computed(() => {
+    return username.value.trim() === '' || password.value.trim() === '';
+});
+
+async function handleLogin() {
+  errorMesage.value = '';
+  try {
+    const requestDto: LoginRequestDto = {
+      username: username.value,
+      password: password.value
+    };
+
+    const response: LoginResponseDto = await requestlogin(requestDto)
+    console.log(response)
+
+  } catch (e) {
+    // this means the login failed on the client
+    errorMesage.value = 'Login failed.';
+  }
+};
 
 </script>
+
+<style scoped lang="scss">
+
+</style>
