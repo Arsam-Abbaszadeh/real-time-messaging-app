@@ -1,24 +1,24 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "types": ["vite/client"],
-    // baseurl makes non relative paths resolve from this directory
-    // You should use use the alis @ instead of src.
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+        "types": ["vite/client"],
+        // baseurl makes non relative paths resolve from this directory
+        // You should use use the alis @ instead of src.
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"]
+        },
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-     // makes usage of non local side effect imports explicit, easier to see, worth keeping on
-    "noUncheckedSideEffectImports": true
-    // Adds syntax that effects runtime behavior, e.g., enums but they are useful
-    // "erasableSyntaxOnly": true,
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+         // makes usage of non local side effect imports explicit, easier to see, worth keeping on
+        "noUncheckedSideEffectImports": true
+        // Adds syntax that effects runtime behavior, e.g., enums but they are useful
+        // "erasableSyntaxOnly": true,
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }

@@ -1,10 +1,10 @@
 <template>
-  <router-view />
+    <router-view />
 </template>
 
 <style scoped lang="scss">
 h1 {
-  color: blue;
+    color: blue;
 }
 
 
