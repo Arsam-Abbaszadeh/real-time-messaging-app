@@ -4,12 +4,8 @@ export class ApiError extends Error {
     public readonly status: number;
     public readonly body?: unknown;
 
-    constructor(
-        message: string,
-        status: number,
-        body?: unknown
-    ) {
-        // error constructor only takes message 
+    constructor(message: string, status: number, body?: unknown) {
+        // error constructor only takes message
         super(message);
         this.name = 'ApiError';
         this.status = status;
@@ -33,21 +29,22 @@ export async function fetchJson<TResponse>(
     const text = await response.text();
     const body = text ? safeJsonParse(text) : undefined;
 
-    // Check for HTTP errors BEFORE checking body type
     if (!response.ok) {
+        // handle errors I expect form the API
         if (response.status === 400 || response.status === 401) {
-            const errorMessage = typeof body === 'string'?
-                (body as any)?.message || body:
-                response.statusText;
-            throw new ApiError(errorMessage, response.status, body);      
-        }
+            const errorMessage = (body as any)?.message || response.statusText;
 
-        const errorMessage = typeof body === 'string' 
-            ? body 
-            : (body as any)?.message || response.statusText;
+            console.log(errorMessage);
+            throw new ApiError(errorMessage, response.status, body);
+        }
+        // other unexpected errors
+        const errorMessage =
+            typeof body === 'string' ? body : (body as any)?.message || response.statusText;
+
         throw new ApiError(errorMessage, response.status, body);
     }
 
+    // handle unexpected non-JSON responses
     if (typeof body === 'string') {
         throw new ApiError(`Expected JSON but got: "${body}"`, response.status);
     }

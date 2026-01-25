@@ -5,11 +5,15 @@ import type {
     CreateAccountRequestDto,
     UserSummaryDto,
 } from './dtos';
+import { HEADERS, HEADER_VALUES } from './httpRequestHeaderConstants.ts';
 
 export function requestlogin(dto: LoginRequestDto): Promise<LoginResponseDto> {
     return fetchJson<LoginResponseDto>('/user/login', {
         method: 'POST',
         body: JSON.stringify(dto),
+        headers: {
+            [HEADERS.CONTENT_TYPE]: HEADER_VALUES.APPLICATION_JSON,
+        },
     });
 }
 
@@ -17,6 +21,9 @@ export function requestCreateAccount(dto: CreateAccountRequestDto): Promise<User
     return fetchJson<UserSummaryDto>('/user/createnewuser', {
         method: 'POST',
         body: JSON.stringify(dto),
+        headers: {
+            [HEADERS.CONTENT_TYPE]: HEADER_VALUES.APPLICATION_JSON,
+        },
     });
 }
 
