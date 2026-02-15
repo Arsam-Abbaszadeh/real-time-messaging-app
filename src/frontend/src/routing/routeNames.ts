@@ -2,7 +2,8 @@ export const ROUTE_NAMES = {
     HOME: 'home',
     LOGIN: 'login',
     ACCOUNT: 'createAccount',
-    // CHAT: 'chat',
+    CHAT_LAYOUT: 'chat',
+    BASE: '/',
 } as const;
 
 // type to allow for compile time safety and intellisense for routenames

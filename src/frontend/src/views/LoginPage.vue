@@ -49,8 +49,10 @@ import { computed, ref } from 'vue';
 // import { requestlogin } from '../api/authRequests';
 // import type { LoginRequestDto, LoginResponseDto } from '../api/dtos';
 import { useAuthStore } from '../stores/authStore';
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
+const route = useRouter();
 const username = ref('');
 const password = ref('');
 const errorMesage = ref('');
@@ -63,8 +65,8 @@ async function handleLogin() {
     const result = await authStore.login(username.value, password.value);
     // error messages not being mapped
     if (result.success) {
-        // redirect to main page
-        console.log('Login successful');
+        console.log('Login successful'); // consider replacing with or adding a toast notification
+        route.push({ name: ROUTE_NAMES.CHAT_LAYOUT });
     } else {
         errorMesage.value = result.message;
     }

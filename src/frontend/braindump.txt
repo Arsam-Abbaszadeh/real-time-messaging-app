@@ -1,6 +1,0 @@
-ok so have auth business logic in the auth store
-for the auth store use the setup Store not the options store, its the recommended and more flexible API.
-keep the request logic seperetted and use that in the store actions themselves, they should be cleanely able to be async.
-have the login, create acc, etc methods return result objects, with error messages and success and what not.
-
-prevent login attempt if loading, either with spinning circle, is true or just block input edits or at least the input button
