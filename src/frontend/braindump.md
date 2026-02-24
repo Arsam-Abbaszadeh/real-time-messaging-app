@@ -25,3 +25,8 @@ Toggles should really be used for network requests prioring to rendering somethi
 
 I think we may want to create a toast or something in general for making acknoledgements of specific things.
 Like a little message shows up from the top right saying succesful login or something
+
+## ChatStore and chat details management
+
+The source of truth for everything is the chatStore. We will have watchers on our store attributes so that each component reacts by itself.
+The parent component will not know anything about what chat is loaded or what not.

@@ -49,7 +49,7 @@ namespace realTimeMessagingWebApp.Controllers
             if (loginResult.IsSuccess) 
             {
                 var refreshExpiration = DateTime.UtcNow.AddDays(_jwtCreationOptions.RefreshExpiration);
-                var refreshToken = await _tokenService.NewRefreshToken((User)loginResult.Data, refreshExpiration);
+                var refreshToken = await _tokenService.NewRefreshToken(loginResult.Data!, refreshExpiration);
 
                 Response.Cookies.Append(RefreshTokenName, refreshToken, new CookieOptions
                 {
@@ -68,7 +68,7 @@ namespace realTimeMessagingWebApp.Controllers
                     IsSuccessful = true,
                     Message = $"User {loginUserDto.Username} logged in successfully",
                     AccessToken = accessTokenResult.AccessToken,
-                    UserId = ((User)loginResult.Data).UserId,
+                    UserId = loginResult.Data!.UserId,
                     AccessTokenExpiration = accessTokenResult.AccessTokenExpiration
                 });
             }

@@ -17,15 +17,15 @@ namespace realTimeMessagingWebApp.Services
         readonly ICustomRepository<GroupChat> _customRepository = customRepository ?? throw new InvalidOperationException($"Could not inject {nameof(ICustomRepository<GroupChat>)}");
         readonly RelationShipService _relationShipService = relationShipService ?? throw new InvalidOperationException($"Could not inject {nameof(RelationShipService)}");
 
-        public async Task<ServiceResult> AddUserToGroupChat(Guid groupChatId, Guid memberId) 
+        public async Task<ServiceResult<GroupChat>> AddUserToGroupChat(Guid groupChatId, Guid memberId) 
             => await AddUsersToGroupChat(groupChatId, [memberId]);
 
-        public async Task<ServiceResult> AddUsersToGroupChat(Guid groupChatId, ICollection<Guid> memberIds)
+        public async Task<ServiceResult<GroupChat>> AddUsersToGroupChat(Guid groupChatId, ICollection<Guid> memberIds)
         {
             var actualGroupChat = await _customRepository.GetFullEntityAsync(_context, groupChatId, true, gc => gc.GroupChatMembers);
             if (actualGroupChat is null)
             {
-                return new ServiceResult
+                return new ServiceResult<GroupChat>
                 {
                     IsSuccess = false,
                     Message = $"Group chat with ID {groupChatId} not found",
@@ -35,7 +35,7 @@ namespace realTimeMessagingWebApp.Services
             var existingMembers = actualGroupChat.GroupChatMembers.Select(m => m.UserId).Intersect(memberIds).ToList();
             if (existingMembers.Count != 0)
             {
-                return new ServiceResult
+                return new ServiceResult<GroupChat>
                 {
                     IsSuccess = false,
                     Message = $"Some users are already members of the group chat {actualGroupChat.GroupChatName}",
@@ -48,7 +48,7 @@ namespace realTimeMessagingWebApp.Services
 
             if (!areAllFriends.IsSuccess)
             {
-                return new ServiceResult
+                return new ServiceResult<GroupChat>
                 {
                     IsSuccess = false,
                     Message = "Not all users to be added are friends of the group chat creator",
@@ -67,7 +67,7 @@ namespace realTimeMessagingWebApp.Services
                 {
                     _context.ChangeTracker.Clear(); // to avoid tracking issues
 
-                    return new ServiceResult
+                    return new ServiceResult<GroupChat>
                     {
                         IsSuccess = false,
                         Message = $"User with ID {memberId} is not a friend of the group chat creator and cannot be added",
@@ -87,7 +87,7 @@ namespace realTimeMessagingWebApp.Services
             }
 
             await _context.SaveChangesAsync();
-            return new ServiceResult
+            return new ServiceResult<GroupChat>
             {
                 IsSuccess = true,
                 Message = $"All users added to group chat {actualGroupChat.GroupChatName} successfully",
@@ -247,12 +247,12 @@ namespace realTimeMessagingWebApp.Services
             };
         }
 
-        public async Task<ServiceResult> CreateAndAddMembersToGroupChat(GroupChat groupChat, Guid creator, Guid? admin, ICollection<Guid> memberIds)
+        public async Task<ServiceResult<GroupChat>> CreateAndAddMembersToGroupChat(GroupChat groupChat, Guid creator, Guid? admin, ICollection<Guid> memberIds)
         {
 
             if (memberIds.Count > 1 && groupChat.ChatType == GroupChatType.DirectMessage)
             {
-                return new ServiceResult
+                return new ServiceResult<GroupChat>
                 {
                     IsSuccess = false,
                     Message = "Direct Message chats can only have one member",
@@ -269,10 +269,14 @@ namespace realTimeMessagingWebApp.Services
             var adminChangeResult = await AssignGroupChatAdmin(groupChat.GroupChatId, actualAdmin);
             if (!adminChangeResult.IsSuccess)
             {
-                return adminChangeResult;
+                return new ServiceResult<GroupChat>
+                {
+                    IsSuccess = false,
+                    Message = adminChangeResult.Message
+                };
             }
 
-            var trackedGroupChar = (GroupChat)groupChatCreationResult.Data!; // should not be null if result creation result was succesful
+            var trackedGroupChar = groupChatCreationResult.Data!; // should not be null if result creation result was succesful
 
             if (memberIds.Count > 0) // idk if this will every equal 0 but just in case
             {
@@ -284,7 +288,7 @@ namespace realTimeMessagingWebApp.Services
                 }
             }
 
-            return new ServiceResult
+            return new ServiceResult<GroupChat>
             {
                 IsSuccess = true,
                 Message = $"Group chat: {trackedGroupChar.GroupChatName} created and members added successfully",
@@ -343,9 +347,15 @@ namespace realTimeMessagingWebApp.Services
             }
         }
 
+        public Task<ServiceResult<ICollection<GroupChat>>> GetUserGroupChats(Guid userId)
+        {
+            throw new NotImplementedException();
+        }
+
+
         #region Helpers
 
-        async Task<ServiceResult> CreateNewGroupChat(GroupChat groupChat, Guid creatorId)
+        async Task<ServiceResult<GroupChat>> CreateNewGroupChat(GroupChat groupChat, Guid creatorId)
         {
             // assumes many values are already set in the group chat entity
             groupChat.CreationDate = DateTime.UtcNow;
@@ -365,7 +375,7 @@ namespace realTimeMessagingWebApp.Services
 
             await _context.SaveChangesAsync();
 
-            return new ServiceResult
+            return new ServiceResult<GroupChat>
             {
                 IsSuccess = true,
                 Message = $"Group chat {groupChat.GroupChatName} created successfully",
@@ -395,8 +405,6 @@ namespace realTimeMessagingWebApp.Services
             int index = random.Next(possibleAdmins.Count);
             return possibleAdmins[index];
         }
-
-
-        # endregion
+        #endregion
     }
 }

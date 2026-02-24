@@ -1,4 +1,4 @@
-export type authResult =  {
-        success: boolean;
-        message: string;
-}
+export type authResult = {
+    success: boolean;
+    message: string;
+};

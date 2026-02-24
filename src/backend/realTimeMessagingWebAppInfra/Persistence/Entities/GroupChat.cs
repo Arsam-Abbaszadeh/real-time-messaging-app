@@ -6,6 +6,7 @@ public class GroupChat
 {
     public Guid GroupChatId { get; set; }
     public string GroupChatName { get; set; }
+    public string GroupChatImageUrl { get; set; }
     public DateTime CreationDate { get; set; }
     public Guid GroupChatCreatorId { get; set; }
     public Guid GroupChatAdminId { get; set; }

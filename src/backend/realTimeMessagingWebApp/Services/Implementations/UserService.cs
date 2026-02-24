@@ -39,12 +39,12 @@ namespace realTimeMessagingWebApp.Services
             };   
         }
 
-        public async Task<ServiceResult> LoginUser(string userName, string password)
+        public async Task<ServiceResult<User>> LoginUser(string userName, string password)
         {
             var loginUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == userName);
             if (loginUser is null)
             {
-                return new ServiceResult
+                return new ServiceResult<User>
                 {
                     IsSuccess = false,
                     Message = $"The username {userName} does not exists"
@@ -54,7 +54,7 @@ namespace realTimeMessagingWebApp.Services
             if (AuthUtilities.VerifyHashedPassword(loginUser.PasswordHash, password) == PasswordVerificationResult.Success) 
             {
                 // At this point the user should be logged, which means I am going to need some auth utils for JWT and stored Auth tokens either in in-memory cache, redis or postgres
-                return new ServiceResult
+                return new ServiceResult<User>
                 {
                     IsSuccess = true,
                     Message = $"Succesful login attempt as user {loginUser.UserName}",
@@ -62,7 +62,7 @@ namespace realTimeMessagingWebApp.Services
                 };
             }
 
-            return new ServiceResult
+            return new ServiceResult<User>
             {
                 IsSuccess = false,
                 Message = "Invalid password"

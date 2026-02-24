@@ -27,7 +27,7 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
 
         if (groupChatResult.IsSuccess)
         {
-            var groupChatSummary = GroupChatDtoMappers.ToGroupChatSummaryDto((GroupChat)groupChatResult.Data!);
+            var groupChatSummary = GroupChatDtoMappers.ToGroupChatSummaryDto(groupChatResult.Data!);
             return Ok(new RequestResponse
             {
                 IsSuccess = true,
@@ -182,7 +182,7 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
     public async Task<ActionResult<RequestResponse>> ChangeGroupChatAdmin([FromRoute] Guid groupChatId, [FromRoute] Guid memberId)
     {
         var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+        var userId = Guid.Parse(userIdString!);
         var authResult = await _authService.UserIsGroupChatAdmin(userId, groupChatId);
         if (!authResult.IsSuccess)
         {
@@ -210,5 +210,25 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
                 Message = changeAdminResult.Message
             });
         }
+    }
+
+    [Authorize]
+    [HttpGet("chatdsummaries")]
+    public async Task<ActionResult<List<GroupChatSummaryDto>>> getChats()
+    {
+        var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+        var userId = Guid.Parse(userIdString!);
+
+        var chatsResult = await _groupChatService.GetUserGroupChats(userId);
+        if (!chatsResult.IsSuccess || chatsResult.Data is null)
+        {
+            return NotFound();
+        }
+
+        var chatSummaries = chatsResult.Data
+            .Select(GroupChatDtoMappers.ToGroupChatSummaryDto)
+            .ToList();
+
+        return Ok(chatSummaries);
     }
 }

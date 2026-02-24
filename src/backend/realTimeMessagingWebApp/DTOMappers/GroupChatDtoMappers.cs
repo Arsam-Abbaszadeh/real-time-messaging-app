@@ -18,9 +18,9 @@ namespace realTimeMessagingWebApp.DTOMappers
         {
             return new GroupChatSummaryDto
             {
-                GroupChatCreationDate = groupChat.CreationDate,
                 GroupChatName = groupChat.GroupChatName,
                 GroupChatId = groupChat.GroupChatId,
+                GroupChatImageUrl = groupChat.GroupChatImageUrl,
             };
         }
     }
