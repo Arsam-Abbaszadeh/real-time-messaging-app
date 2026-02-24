@@ -1,6 +1,6 @@
-﻿namespace realTimeMessagingWebApp.Services.ResponseModels
+namespace realTimeMessagingWebApp.Services.ResponseModels
 {
-    public class GroupChatAuthResult
+    public class ChatAuthResult
     {
         public bool IsAdmin { get; set; }
         public bool IsMember { get; set; }

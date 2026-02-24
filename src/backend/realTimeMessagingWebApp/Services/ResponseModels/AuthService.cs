@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using realTimeMessagingWebAppInfra.Persistence.Data;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 
@@ -8,11 +8,11 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
     {
         readonly Context _context = dbContext;
 
-        public async Task<ServiceResult> IsSelfActionOnGroupChat(Guid actionUserId, Guid targetUserId, Guid groupChatId)
+        public async Task<ServiceResult> IsSelfActionOnChat(Guid actionUserId, Guid targetUserId, Guid chatId)
         {
-            var isMember = await _context.GroupChatConnectors
+            var isMember = await _context.ChatConnectors
                 .AsNoTracking()
-                .AnyAsync(gcc => gcc.GroupChatId == groupChatId && gcc.UserId == actionUserId);
+                .AnyAsync(gcc => gcc.ChatId == chatId && gcc.UserId == actionUserId);
 
             var isSelf = actionUserId == targetUserId;
 
@@ -28,24 +28,24 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
             return new ServiceResult
             {
                 IsSuccess = false,
-                Message = "User is not taking action on themselves or is not a member of the group chat"
+                Message = "User is not taking action on themselves or is not a member of the chat"
             };
         }
 
-        public async Task<ServiceResult> UserIsGroupChatAdmin(Guid adminId, Guid groupChatId)
+        public async Task<ServiceResult> UserIsChatAdmin(Guid adminId, Guid chatId)
         {
             // this is where you use cache first and then db second
 
-            var isAdmin = await _context.GroupChats
+            var isAdmin = await _context.Chats
                 .AsNoTracking()
-                .AnyAsync(gc => gc.GroupChatId == groupChatId && gc.GroupChatAdminId == adminId);
+                .AnyAsync(gc => gc.ChatId == chatId && gc.ChatAdminId == adminId);
 
             if (isAdmin)
             {
                 return new ServiceResult
                 {
                     IsSuccess = true,
-                    Message = "User is admin of the group chat"
+                    Message = "User is admin of the chat"
                 };
             }
             else
@@ -53,23 +53,23 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
                 return new ServiceResult
                 {
                     IsSuccess = false,
-                    Message = "User is not admin of the group chat (the group chat might not exist)"
+                    Message = "User is not admin of the chat (the chat might not exist)"
                 };
             }
         }
 
-        public async Task<ServiceResult> UserIsGroupChatMember(Guid memberId, Guid groupChatId)
+        public async Task<ServiceResult> UserIsChatMember(Guid memberId, Guid chatId)
         {
-            var isMember = await _context.GroupChatConnectors
+            var isMember = await _context.ChatConnectors
                 .AsNoTracking()
-                .AnyAsync(gcc => gcc.GroupChatId == groupChatId && gcc.UserId == memberId);
+                .AnyAsync(gcc => gcc.ChatId == chatId && gcc.UserId == memberId);
 
             if (isMember)
             {
                 return new ServiceResult
                 {
                     IsSuccess = true,
-                    Message = $"User with Id {memberId} is member of the group chat"
+                    Message = $"User with Id {memberId} is member of the chat"
                 };
             }
             else
@@ -77,27 +77,27 @@ namespace realTimeMessagingWebApp.Services.ResponseModels
                 return new ServiceResult
                 {
                     IsSuccess = false,
-                    Message = $"User with Id {memberId} is not member of the group chat"
+                    Message = $"User with Id {memberId} is not member of the chat"
                 };
             }
         }
 
-        public async Task<GroupChatAuthResult> GetGroupChatAuthStatus(Guid userId, Guid targetUserId, Guid groupChatId)
+        public async Task<ChatAuthResult> GetChatAuthStatus(Guid userId, Guid targetUserId, Guid chatId)
         {
             // Single query to check admin status
-            var isAdmin = await _context.GroupChats
+            var isAdmin = await _context.Chats
                 .AsNoTracking()
-                .AnyAsync(gc => gc.GroupChatId == groupChatId && gc.GroupChatAdminId == userId);
+                .AnyAsync(gc => gc.ChatId == chatId && gc.ChatAdminId == userId);
 
             // If admin, they're automatically a member - no DB query needed
             var isMember = isAdmin 
                 ? true 
-                : await _context.GroupChatConnectors
-                    .AnyAsync(gcc => gcc.GroupChatId == groupChatId && gcc.UserId == userId);
+                : await _context.ChatConnectors
+                    .AnyAsync(gcc => gcc.ChatId == chatId && gcc.UserId == userId);
 
             var isSelfAction = userId == targetUserId;
 
-            return new GroupChatAuthResult
+            return new ChatAuthResult
             {
                 IsAdmin = isAdmin,
                 IsMember = isMember,

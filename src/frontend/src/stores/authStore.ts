@@ -8,12 +8,11 @@ import type { authResult } from './types/authStoreTypes';
 
 export const useAuthStore = defineStore('auth', () => {
     // state
-    const accessToken = ref<string | null>(null);
     const accessTokenExpiry: Ref<Date | null> = ref(null);
-
+    const hasAccessToken: Ref<Boolean | null> = ref(false);
     // getters
     const hasTokenValid = computed(() => {
-        if (!accessToken || !accessTokenExpiry.value) {
+        if (!hastoken.value || !accessTokenExpiry.value) {
             return false;
         }
         return Date.now() < accessTokenExpiry.value.getTime();
@@ -30,7 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             // need to check if we can unsucessful login without throwing error
             const response = await requestlogin(dto);
-            accessToken.value = response.accessToken;
+            hasAccessToken.value = true;
             accessTokenExpiry.value = response.accessTokenExpiration;
 
             return {
@@ -40,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (error) {
             if (error instanceof ApiError) {
                 // do I need to still set these to null?
-                accessToken.value = null;
+                hasAccessToken.value = null;
                 accessTokenExpiry.value = null;
                 return {
                     success: false,

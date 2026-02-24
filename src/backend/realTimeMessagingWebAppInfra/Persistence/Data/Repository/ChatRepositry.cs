@@ -1,27 +1,27 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 
 namespace realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 
-public class GroupChatRepositry : ICustomRepository<GroupChat>
+public class ChatRepositry : ICustomRepository<Chat>
 {
     // Basic version, no including nav props
-    public async Task<GroupChat?> GetFullEntityAsync(Context context, Guid id, bool reload = true)
+    public async Task<Chat?> GetFullEntityAsync(Context context, Guid id, bool reload = true)
         => await GetInternalAsync(context, id, reload, []);
 
     // Dynamic includes version
-    public async Task<GroupChat?> GetFullEntityAsync(Context context, Guid id, bool reload = true, params Expression<Func<GroupChat, object>>[] includes)
+    public async Task<Chat?> GetFullEntityAsync(Context context, Guid id, bool reload = true, params Expression<Func<Chat, object>>[] includes)
         => await GetInternalAsync(context, id, reload, includes);
 
-    async Task<GroupChat?> GetInternalAsync(
+    async Task<Chat?> GetInternalAsync(
         Context context,
         Guid id,
         bool reload,
-        Expression<Func<GroupChat, object>>[] includes)
+        Expression<Func<Chat, object>>[] includes)
     {
-        var tracked = context.ChangeTracker.Entries<GroupChat>()
-            .FirstOrDefault(e => e.Entity.GroupChatId == id);
+        var tracked = context.ChangeTracker.Entries<Chat>()
+            .FirstOrDefault(e => e.Entity.ChatId == id);
 
         if (tracked is not null)
         {
@@ -33,7 +33,7 @@ public class GroupChatRepositry : ICustomRepository<GroupChat>
             tracked.State = EntityState.Detached;
         }
 
-        var query = (IQueryable<GroupChat>)context.GroupChats; // requires explicit cast
+        var query = (IQueryable<Chat>)context.Chats; // requires explicit cast
 
         if (includes.Length > 0)
         {
@@ -43,6 +43,6 @@ public class GroupChatRepositry : ICustomRepository<GroupChat>
             }
         }
 
-        return await query.FirstOrDefaultAsync(g => g.GroupChatId == id);
+        return await query.FirstOrDefaultAsync(g => g.ChatId == id);
     }
 }

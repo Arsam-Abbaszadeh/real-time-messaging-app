@@ -25,10 +25,10 @@ builder.Services.AddRealtimeMessagingWebAppContext(connectionString);
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IGroupChatService, GroupChatService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFriendShipRequestService, FriendShipRequestService>();
-builder.Services.AddScoped<ICustomRepository<GroupChat>, GroupChatRepositry>();
+builder.Services.AddScoped<ICustomRepository<Chat>, ChatRepositry>();
 builder.Services.AddScoped<IMessageSequenceTrackerService, MessageSequenceTrackerService>();
 builder.Services.AddScoped<RelationShipService>();
 

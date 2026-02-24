@@ -36,7 +36,7 @@ public sealed class ChatHub(
         {
             var userIdString = Context.User?.Claims.First(c => c.Type == "id")?.Value;
             var userId = Guid.Parse(userIdString!); // should not be null if token is validated
-            var isMember = await _authService.UserIsGroupChatMember(userId, chatId);
+            var isMember = await _authService.UserIsChatMember(userId, chatId);
             if (!isMember.IsSuccess)
             {
                 throw new HubException("You must be a member of the chat to join it"); // does this return a bad request type thing to the frontend?

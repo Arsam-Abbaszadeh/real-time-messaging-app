@@ -9,7 +9,7 @@ public class User
     public int UserProfileBucketKey { get; set; } // might be worth changin 
     public DateTime SignUpDate { get; set; }
     
-    public ICollection<GroupChat> GroupChats { get; set; } = new HashSet<GroupChat>();
+    public ICollection<Chat> Chats { get; set; } = new HashSet<Chat>();
     
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new HashSet<RefreshToken>();
 

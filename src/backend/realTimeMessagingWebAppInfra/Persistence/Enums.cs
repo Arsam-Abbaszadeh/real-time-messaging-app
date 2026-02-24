@@ -1,6 +1,6 @@
 ﻿namespace realTimeMessagingWebAppInfra.Persistence.Enums;
 
-public enum GroupChatType
+public enum ChatType
 {
     DirectMessage,
     MultiChat

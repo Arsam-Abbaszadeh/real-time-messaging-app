@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 
 namespace realTimeMessagingWebAppInfra.Persistence.Data;
@@ -6,8 +6,8 @@ namespace realTimeMessagingWebAppInfra.Persistence.Data;
 public class Context(DbContextOptions<Context> options) : DbContext(options)
 {
     public DbSet<User> Users { get; set; }
-    public DbSet<GroupChat> GroupChats { get; set; }
-    public DbSet<GroupChatConnector> GroupChatConnectors { get; set; }
+    public DbSet<Chat> Chats { get; set; }
+    public DbSet<ChatConnector> ChatConnectors { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<FriendShip> FriendShips { get; set; }
     public DbSet<MessageAttachment> MessageAttachments { get; set; }
@@ -23,13 +23,13 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql(uuidGenSql);
 
-        modelBuilder.Entity<GroupChat>()
-            .Property(e => e.GroupChatId)
+        modelBuilder.Entity<Chat>()
+            .Property(e => e.ChatId)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql(uuidGenSql);
 
-        modelBuilder.Entity<GroupChatConnector>()
-            .Property(e => e.GroupChatConnectorId)
+        modelBuilder.Entity<ChatConnector>()
+            .Property(e => e.ChatConnectorId)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql(uuidGenSql);
 
@@ -55,9 +55,9 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
 
         // --- Relationships ---
         modelBuilder.Entity<User>()
-            .HasMany(u => u.GroupChats)
-            .WithMany(gc => gc.GroupChatMembers)
-            .UsingEntity<GroupChatConnector>();
+            .HasMany(u => u.Chats)
+            .WithMany(gc => gc.ChatMembers)
+            .UsingEntity<ChatConnector>();
 
         modelBuilder.Entity<Message>()
             .HasMany(m => m.Attachments)

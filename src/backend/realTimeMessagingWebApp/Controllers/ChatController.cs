@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
 using realTimeMessagingWebApp.DTOMappers;
@@ -10,28 +10,28 @@ namespace realTimeMessagingWebApp.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ChatController(IGroupChatService groupChatService, IAuthService authService) : ControllerBase // should maybe make chat lower case
+public class ChatController(IChatService chatService, IAuthService authService) : ControllerBase
 {
-    readonly IGroupChatService _groupChatService = groupChatService;
+    readonly IChatService _chatService = chatService;
     readonly IAuthService _authService = authService;
 
     [Authorize]
     [HttpPost("newchat")]
-    public async Task<ActionResult<RequestResponse>> CreateNewGroupChat([FromBody] CreateGroupChatDto groupChatDto)
+    public async Task<ActionResult<RequestResponse>> CreateNewChat([FromBody] CreateChatDto chatDto)
     {
         var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
         var userId = Guid.Parse(userIdString!); // should not be null if token is validated
 
-        var newGroupChat = GroupChatDtoMappers.ToGroupChatEntity(groupChatDto);
-        var groupChatResult = await _groupChatService.CreateAndAddMembersToGroupChat(newGroupChat, userId, groupChatDto.Admin, groupChatDto.GroupChatMembers);
+        var newChat = ChatDtoMappers.ToChatEntity(chatDto);
+        var chatResult = await _chatService.CreateAndAddMembersToChat(newChat, userId, chatDto.Admin, chatDto.ChatMembers);
 
-        if (groupChatResult.IsSuccess)
+        if (chatResult.IsSuccess)
         {
-            var groupChatSummary = GroupChatDtoMappers.ToGroupChatSummaryDto(groupChatResult.Data!);
+            var chatSummary = ChatDtoMappers.ToChatSummaryDto(chatResult.Data!);
             return Ok(new RequestResponse
             {
                 IsSuccess = true,
-                Message = groupChatResult.Message,
+                Message = chatResult.Message,
             });
         }
         else
@@ -39,18 +39,18 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
             return BadRequest(new RequestResponse
             {
                 IsSuccess = false,
-                Message = groupChatResult.Message
+                Message = chatResult.Message
             });
         }
     }
 
     [Authorize]
-    [HttpPost("{groupChatId}")]
-    public async Task<ActionResult<RequestResponse>> AddMembersToGroupChat([FromRoute] Guid groupChatId, [FromBody] ICollection<Guid> newMemberIds)
+    [HttpPost("{chatId}")]
+    public async Task<ActionResult<RequestResponse>> AddMembersToChat([FromRoute] Guid chatId, [FromBody] ICollection<Guid> newMemberIds)
     {
         var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
         var userId = Guid.Parse(userIdString!); // should not be null if token is validated
-        var authResult = await _authService.UserIsGroupChatAdmin(userId, groupChatId);
+        var authResult = await _authService.UserIsChatAdmin(userId, chatId);
 
         if (!authResult.IsSuccess)
         {
@@ -61,7 +61,7 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
             });
         }
 
-        var addMembersResult = await _groupChatService.AddUsersToGroupChat(groupChatId, newMemberIds);
+        var addMembersResult = await _chatService.AddUsersToChat(chatId, newMemberIds);
         if (addMembersResult.IsSuccess)
         {
             return Ok(new RequestResponse
@@ -83,13 +83,13 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
 
     // Fix to only assign group members as admins not just friends
     [Authorize]
-    [HttpDelete("{groupChatId}")]
-    public async Task<ActionResult<RequestResponse>> DeleteGroupChat([FromRoute] Guid groupChatId)
+    [HttpDelete("{chatId}")]
+    public async Task<ActionResult<RequestResponse>> DeleteChat([FromRoute] Guid chatId)
     {
         var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
         var userId = Guid.Parse(userIdString!); // should not be null if token is validated
 
-        var authResult = await _authService.UserIsGroupChatAdmin(userId, groupChatId);
+        var authResult = await _authService.UserIsChatAdmin(userId, chatId);
         if (!authResult.IsSuccess)
         {
             return Unauthorized(new RequestResponse
@@ -99,7 +99,7 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
             });
         }
 
-        var deleteResult = await _groupChatService.DeleteGroupChat(groupChatId);
+        var deleteResult = await _chatService.DeleteChat(chatId);
         if (deleteResult.IsSuccess)
         {
             return Ok(new RequestResponse
@@ -119,17 +119,17 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
     }
 
     [Authorize]
-    [HttpDelete("{groupChatid}/members/{memberId}")]
-    public async Task<ActionResult<RequestResponse>> RemoveMemberFromGroupChat([FromRoute] Guid groupChatId, [FromRoute] Guid memberId)
+    [HttpDelete("{chatId}/members/{memberId}")]
+    public async Task<ActionResult<RequestResponse>> RemoveMemberFromChat([FromRoute] Guid chatId, [FromRoute] Guid memberId)
     {
         var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
         var userId = Guid.Parse(userIdString!); // should not be null if token is validated
-        //var isSelfAction = _authService.IsSelfActionOnGroupChat(userId, memberId, groupChatId);
-        var userStatusResult = await _authService.GetGroupChatAuthStatus(userId, memberId, groupChatId);
+        //var isSelfAction = _authService.IsSelfActionOnChat(userId, memberId, chatId);
+        var userStatusResult = await _authService.GetChatAuthStatus(userId, memberId, chatId);
 
         if (userStatusResult.IsSelfAction)
         {
-            var selfRemoveResult = await _groupChatService.RemoveSelfFromGroupChat(groupChatId, userId, userStatusResult.IsAdmin);
+            var selfRemoveResult = await _chatService.RemoveSelfFromChat(chatId, userId, userStatusResult.IsAdmin);
             if (selfRemoveResult.IsSuccess)
             {
                 return Ok(new RequestResponse
@@ -149,7 +149,7 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
         }
         else if (userStatusResult.IsAdmin) // user is admin and removing other user
         {
-            var removeOtherResult = await _groupChatService.RemoveOtherUserFromGroupChat(groupChatId, memberId);
+            var removeOtherResult = await _chatService.RemoveOtherUserFromChat(chatId, memberId);
             if (removeOtherResult.IsSuccess)
             {
                 return Ok(new RequestResponse
@@ -178,12 +178,12 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
     }
 
     [Authorize]
-    [HttpPatch("{groupChatid}/members/{memberId}")]
-    public async Task<ActionResult<RequestResponse>> ChangeGroupChatAdmin([FromRoute] Guid groupChatId, [FromRoute] Guid memberId)
+    [HttpPatch("{chatId}/members/{memberId}")]
+    public async Task<ActionResult<RequestResponse>> ChangeChatAdmin([FromRoute] Guid chatId, [FromRoute] Guid memberId)
     {
         var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
         var userId = Guid.Parse(userIdString!);
-        var authResult = await _authService.UserIsGroupChatAdmin(userId, groupChatId);
+        var authResult = await _authService.UserIsChatAdmin(userId, chatId);
         if (!authResult.IsSuccess)
         {
             return Unauthorized(new RequestResponse
@@ -193,7 +193,7 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
             });
         }
 
-        var changeAdminResult = await _groupChatService.ChangeGroupChatAdmin(groupChatId, memberId);
+        var changeAdminResult = await _chatService.ChangeChatAdmin(chatId, memberId);
         if (changeAdminResult.IsSuccess)
         {
             return Ok(new RequestResponse
@@ -214,19 +214,19 @@ public class ChatController(IGroupChatService groupChatService, IAuthService aut
 
     [Authorize]
     [HttpGet("chatdsummaries")]
-    public async Task<ActionResult<List<GroupChatSummaryDto>>> getChats()
+    public async Task<ActionResult<List<ChatSummaryDto>>> getChats()
     {
         var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
         var userId = Guid.Parse(userIdString!);
 
-        var chatsResult = await _groupChatService.GetUserGroupChats(userId);
+        var chatsResult = await _chatService.GetUserChats(userId);
         if (!chatsResult.IsSuccess || chatsResult.Data is null)
         {
             return NotFound();
         }
 
         var chatSummaries = chatsResult.Data
-            .Select(GroupChatDtoMappers.ToGroupChatSummaryDto)
+            .Select(ChatDtoMappers.ToChatSummaryDto)
             .ToList();
 
         return Ok(chatSummaries);
