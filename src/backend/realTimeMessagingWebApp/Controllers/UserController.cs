@@ -65,7 +65,6 @@ namespace realTimeMessagingWebApp.Controllers
 
                 return Ok(new LoginResponseDto
                 {
-                    IsSuccessful = true,
                     Message = $"User {loginUserDto.Username} logged in successfully",
                     AccessToken = accessTokenResult.AccessToken,
                     UserId = loginResult.Data!.UserId,
@@ -75,7 +74,6 @@ namespace realTimeMessagingWebApp.Controllers
 
             return Unauthorized(new LoginResponseDto
             {
-                IsSuccessful = false,
                 Message = loginResult.Message
             });
         }
@@ -118,7 +116,6 @@ namespace realTimeMessagingWebApp.Controllers
                     {
                         return Ok(new LoginResponseDto
                         {
-                            IsSuccessful = true,
                             Message = "new access token generated successfully",
                             AccessToken = accessTokenResult.AccessToken,
                             AccessTokenExpiration = accessTokenResult.AccessTokenExpiration

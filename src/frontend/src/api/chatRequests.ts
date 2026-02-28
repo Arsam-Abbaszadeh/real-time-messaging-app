@@ -1,13 +1,17 @@
 import { fetchJson } from './httpRequests.ts';
 import { HEADERS, HEADER_VALUES } from './httpRequestHeaderConstants.ts';
-import type { chatSummary } from './dtos/chatDtos.ts';
-import { useAuthStore } from '@/stores/authStore.ts';
+import type { chatSummaryDto } from './dtos/chatDtos.ts';
 
-const authstore = useAuthStore();
+export async function getChatSummaries(): Promise<Array<chatSummaryDto>> {
+    return await fetchJson<Array<chatSummaryDto>>('/chat/chatsummaries', {
+        method: 'GET',
+    });
+}
 
-// DTOs are not exactly perfect yet, also need to use auth store probs
-export function getChatSummaries(): Promise<Array<chatSummary>> {
-    return fetchJson<Array<chatSummary>>('/chat/chatsummaries', {
+// TODO: this needs to be paginated and what not, cant make a get request for entire history
+export async function getChatHistory(id: string) {
+    // need to get create actualy tyhpe for chat history
+    return await fetchJson<Array<chatSummaryDto>>('/chat/chatsummaries', {
         method: 'GET',
     });
 }

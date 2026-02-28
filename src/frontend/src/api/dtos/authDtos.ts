@@ -4,10 +4,10 @@ export type LoginRequestDto = {
 };
 
 export type LoginResponseDto = {
-    accessToken: string;
     userId: string;
     username: string;
     message: string;
+    accessToken: string;
     accessTokenExpiration: Date;
 };
 

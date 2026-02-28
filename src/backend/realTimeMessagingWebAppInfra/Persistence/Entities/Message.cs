@@ -11,7 +11,7 @@
         public DateTime? EditedAt { get; set; } = null;
         public bool IsDeleted { get; set; } = false;
         public DateTime? DeletedAt { get; set; } = null;
-        public ulong SequenceNumber { get; set; }
+        public uint SequenceNumber { get; set; } // should be ulong maybe but we wont ever get to that scale
 
         // Nav properties
         public User Sender { get; set; }

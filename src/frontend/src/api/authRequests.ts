@@ -7,8 +7,8 @@ import type {
 } from './dtos';
 import { HEADERS, HEADER_VALUES } from './httpRequestHeaderConstants.ts';
 
-export function requestlogin(dto: LoginRequestDto): Promise<LoginResponseDto> {
-    return fetchJson<LoginResponseDto>('/user/login', {
+export async function requestlogin(dto: LoginRequestDto): Promise<LoginResponseDto> {
+    return await fetchJson<LoginResponseDto>('/user/login', {
         method: 'POST',
         body: JSON.stringify(dto),
         headers: {
@@ -17,8 +17,8 @@ export function requestlogin(dto: LoginRequestDto): Promise<LoginResponseDto> {
     });
 }
 
-export function requestCreateAccount(dto: CreateAccountRequestDto): Promise<UserSummaryDto> {
-    return fetchJson<UserSummaryDto>('/user/createnewuser', {
+export async function requestCreateAccount(dto: CreateAccountRequestDto): Promise<UserSummaryDto> {
+    return await fetchJson<UserSummaryDto>('/user/createnewuser', {
         method: 'POST',
         body: JSON.stringify(dto),
         headers: {
@@ -27,8 +27,8 @@ export function requestCreateAccount(dto: CreateAccountRequestDto): Promise<User
     });
 }
 
-export function refreshAccessTokenRequest(): Promise<LoginResponseDto> {
-    return fetchJson<LoginResponseDto>('/user/refreshaccesstokentoken', {
+export async function requestNewAccessToken(): Promise<LoginResponseDto> {
+    return await fetchJson<LoginResponseDto>('/user/refreshaccesstokentoken', {
         method: 'GET',
     });
 }

@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import type { ChatSummary } from './types/chatStoreTypes';
+import type { chatSummaryDto } from '@/api/dtos';
+import { getChatSummaries } from '@/api/chatRequests';
+import { requestWithAuthRetry } from '@/utils/requestHelper';
 
 export const useChatStore = defineStore('chat', () => {
     // state
@@ -18,24 +21,35 @@ export const useChatStore = defineStore('chat', () => {
     });
 
     // actions
-    function setCurrentChatId(id: string) {
+    function setCurrentChatId(id: string): void {
         if (!chatSummaries.value.some((d) => d.id === id)) {
             throw new Error(`Chat with id "${id}" not found`);
         }
         currentChatId.value = id;
     }
 
-    function getChatSummaries() {
-        // make request and set value
-        let summaries: ChatSummary[] = [];
-        chatSummaries.value = summaries;
+    async function refreshChatSummaries(): Promise<void> {
+        // TODO: do we need any error handelling here?
+        let summaries = await requestWithAuthRetry<chatSummaryDto[]>(
+            async () => await getChatSummaries()
+        );
+        chatSummaries.value = summaries.map(toChatSummary);
     }
 
     function getChatHistory(id: string, firstMessageSeq: number, lastMessageSeq: number) {
         // make request
     }
 
-    function getChatCachedHistory(id: string) {
+    function getCachedChatHistory(id: string) {
         // use dexie.js to create cache and use it within this store
     }
 });
+
+// helpers
+function toChatSummary(dto: chatSummaryDto): ChatSummary {
+    return {
+        id: dto.chatId,
+        name: dto.chatName,
+        imageUrl: dto.chatImageUrl,
+    };
+}

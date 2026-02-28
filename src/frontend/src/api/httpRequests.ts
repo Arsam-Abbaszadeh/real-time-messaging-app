@@ -31,10 +31,9 @@ export async function fetchJson<TResponse>(
 
     if (!response.ok) {
         // handle errors I expect form the API
-        if (response.status === 400 || response.status === 401) {
+        if ([400, 401, 403].includes(response.status)) {
             const errorMessage = (body as any)?.message || response.statusText;
 
-            console.log(errorMessage);
             throw new ApiError(errorMessage, response.status, body);
         }
         // other unexpected errors
