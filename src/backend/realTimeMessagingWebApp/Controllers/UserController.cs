@@ -112,7 +112,7 @@ namespace realTimeMessagingWebApp.Controllers
 
                 try
                 {
-                     if (accessTokenResult.ValidRefreshToken)
+                    if (accessTokenResult.ValidRefreshToken)
                     {
                         return Ok(new LoginResponseDto
                         {

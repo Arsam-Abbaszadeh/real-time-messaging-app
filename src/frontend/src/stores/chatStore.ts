@@ -40,9 +40,8 @@ export const useChatStore = defineStore('chat', () => {
         // make request
     }
 
-    function getCachedChatHistory(id: string) {
-        // use dexie.js to create cache and use it within this store
-    }
+    function getCachedChatHistory(id: string) {}
+    // use dexie.js to create cache and use it within this store
 });
 
 // helpers

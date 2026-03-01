@@ -7,6 +7,5 @@ public static class ObjectStorageUtilities
         // could add date paths as well
         return $"{chatId}/chats/{userId}/{Guid.NewGuid()}.{fileExtension}";
     }
-
-
 }
+ 

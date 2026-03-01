@@ -61,7 +61,7 @@ public sealed class ChatHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, strChatId);
     }
 
-    public async Task GetPreSignedUrlForChatImageUpload(ImageDetailsForObjectKeyDto imageDetails)
+    public async Task GetPreSignedUrlForChatImageUpload(ImageDetailsForUploadUrlDto imageDetails)
     {
         var chatId = imageDetails.ChatId.ToString();
         ThrowIfUserNotInChat(chatId, "You must join the chat before trying to upload files to it");
@@ -69,8 +69,9 @@ public sealed class ChatHub(
         var objectKey = ObjectStorageUtilities.GenerateObjectKeyForChatFile(
             imageDetails.UserId, imageDetails.ChatId, imageDetails.FileExtension);
 
+        var userId = Guid.Parse(Context.User?.Claims.First(c => c.Type == "id")?.Value);
         var presignedUrl = await _objectStorageService.CreateObjectUrlForClientUploadAsync(
-            BucketKeys.Public, objectKey, imageDetails.FileType, imageDetails.UploadedAt);
+            BucketKeys.Private, objectKey, imageDetails.FileType);
 
         await Clients.Clients(Context.ConnectionId)
             .SendAsync("ReceivePreSignedUrlForChatImageUpload", new ImageAccessDetailsDto

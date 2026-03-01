@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using realTimeMessagingWebAppInfra.Configurations;
 using realTimeMessagingWebAppInfra.Storage.Constants;
 using realTimeMessagingWebAppInfra.Storage.Services.ResponseModel;
+using realTimeMessagingWebAppInfra.Storage.Utilities;
 
 namespace realTimeMessagingWebAppInfra.Storage.Services;
 
@@ -125,7 +126,7 @@ public class ObjectStorageService(
 
     public async Task<ObjectResponseEtag> GetObjectFromBucketAsync(string bucket, string objectKey)
     {
-        var getRequest= new GetObjectRequest
+        var getRequest = new GetObjectRequest
         {
             BucketName = bucket,
             Key = objectKey
@@ -143,7 +144,6 @@ public class ObjectStorageService(
                 IsSuccess = true,
                 statusCode = response.HttpStatusCode
             };
-
         }
         else
         {
@@ -157,20 +157,20 @@ public class ObjectStorageService(
         }
     }
 
-    public async Task<string> CreateObjectUrlForClientUploadAsync(BucketKeys bucketKey, string objectKey, string contentType, DateTime uploadedAtUtc)
+    public async Task<string> CreateObjectUrlForClientUploadAsync(
+        BucketKeys bucketKey,
+        string objectKey,
+        string contentType)
     {
-        var metaData = new MetadataCollection();
-        // round trip the datetime to ensure we dont lose precision
-        metaData.Add("UploadedAtFromBackend", uploadedAtUtc.ToString("O", CultureInfo.InvariantCulture));
-
         var presignedUrlRequest = new GetPreSignedUrlRequest
         {
             BucketName = BucketMappings.GetBucketNameFromKey(bucketKey),
             Key = objectKey,
             Verb = HttpVerb.PUT,
-            Expires = DateTime.UtcNow.AddHours(_bucketOptions.BucketUploadExpirationInMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(_bucketOptions.BucketUploadExpirationInMinutes),
             ContentType = contentType
         };
+
         var presignedUrl = await _s3Client.GetPreSignedURLAsync(presignedUrlRequest);
         return presignedUrl;
     }

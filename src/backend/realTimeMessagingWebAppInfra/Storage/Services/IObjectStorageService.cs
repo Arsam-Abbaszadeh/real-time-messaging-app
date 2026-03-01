@@ -10,5 +10,5 @@ public interface IObjectStorageService
     Task<ObjectResponse> DeleteObjectFromBucketAsync(string bucket, string objectKey);
     // dont think we need update for now
     Task<string> GetObjectUrlForClientRenderingAsync(BucketKeys bucketKey, string objectKey);
-    Task<string> CreateObjectUrlForClientUploadAsync(BucketKeys bucketKey, string objectKey, string contentType, DateTime uploadedAtUtc);
+    Task<string> CreateObjectUrlForClientUploadAsync(BucketKeys bucketKey, string objectKey, string contentType);
 }
