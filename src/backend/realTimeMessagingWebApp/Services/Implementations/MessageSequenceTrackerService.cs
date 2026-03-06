@@ -7,11 +7,11 @@ public class MessageSequenceTrackerService(Context dbContext) : IMessageSequence
 {
     readonly Context _context = dbContext;
     // concurrent dictionary to handle multiple sequence numbers requested at once
-    readonly static ConcurrentDictionary<Guid, ulong> ChatMessageSequenceNumber = []; // chatId, lastSequenceNumber
+    readonly static ConcurrentDictionary<Guid, uint> ChatMessageSequenceNumber = []; // chatId, lastSequenceNumber
 
     // Method itself doesnt handle concurrent access well, as multiple users could get the same sequence number if they call this method at the same time for the same chat.
     // But the method caller (ChatHub) handles this by using a SemaphoreSlim per chat room to ensure that only one thread can access this method for a specific chat at a time.
-    public ulong GetNextSequenceNumber(Guid chatId)
+    public uint GetNextSequenceNumber(Guid chatId)
     {
         var sequenceLoaded = ChatMessageSequenceNumber.TryGetValue(chatId, out var lastSequenceNumber);
         if (sequenceLoaded)

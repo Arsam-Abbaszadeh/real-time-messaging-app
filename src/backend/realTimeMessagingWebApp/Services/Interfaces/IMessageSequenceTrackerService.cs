@@ -2,5 +2,5 @@
 
 public interface IMessageSequenceTrackerService
 {
-    public ulong GetNextSequenceNumber(Guid chatId);
+    public uint GetNextSequenceNumber(Guid chatId);
 }

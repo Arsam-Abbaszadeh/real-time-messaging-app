@@ -1,4 +1,5 @@
 using realTimeMessagingWebApp.DTOs;
+using realTimeMessagingWebApp.Services.ArgumentOptions;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 
 namespace realTimeMessagingWebApp.DTOMappers
@@ -21,6 +22,18 @@ namespace realTimeMessagingWebApp.DTOMappers
                 ChatName = chat.ChatName,
                 ChatId = chat.ChatId,
                 ChatImageUrl = chat.ChatImageUrl,
+            };
+        }
+
+        public static ChatHistoryOptions ToChatHistoryOptions(PaginatedChatHistoryOptionsDto optionsDto)
+        {
+            return new ChatHistoryOptions
+            {
+                ChatId = optionsDto.ChatId,
+                StartMessageSequence = optionsDto.StartMessageSequence,
+                EndMessageSequence = optionsDto.EndMessageSequence,
+                EndFallBackToMaxInt = optionsDto.EndFallBackToMaxInt,
+                EndMessageIsLast = optionsDto.EndMessageIsLast,
             };
         }
     }

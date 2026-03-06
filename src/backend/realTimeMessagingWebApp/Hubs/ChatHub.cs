@@ -1,13 +1,15 @@
-﻿using realTimeMessagingWebAppInfra.Storage.Constants;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using realTimeMessagingWebApp.Configurations;
+using realTimeMessagingWebApp.DTOMappers;
 using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Services;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
+using realTimeMessagingWebAppInfra.Storage.Constants;
 using realTimeMessagingWebAppInfra.Storage.Services;
 using realTimeMessagingWebAppInfra.Storage.Utilities;
-using Microsoft.Extensions.Options;
 
 namespace realTimeMessagingWebApp.Hubs;
 
@@ -17,6 +19,7 @@ public sealed class ChatHub(
     IMessageSequenceTrackerService sequenceService,
     IKafkaProducerService kafkaProducerService,
     IObjectStorageService ObjectStorageService,
+    IChatService chatService,
     IOptions<KafkaConfigurations> KafkaConfigurations
 ) : Hub
 {
@@ -24,6 +27,7 @@ public sealed class ChatHub(
     readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead
     readonly IKafkaProducerService _kafkaProducerService = kafkaProducerService;
     readonly IObjectStorageService _objectStorageService = ObjectStorageService;
+    readonly IChatService _chatService = chatService;
     readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations.Value;
 
     readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> rooms = []; // chatId, (signalR connectionIds, filler byte value)
@@ -53,12 +57,39 @@ public sealed class ChatHub(
         }
     }
 
+    // TODO: decide if you actually want to leave a chat like ever..
     public async Task LeaveChatAsync(Guid chatId)
     {
         var strChatId = chatId.ToString();
         ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to leave it");
         rooms[strChatId].TryRemove(Context.ConnectionId, out _);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, strChatId);
+    }
+
+    public async Task GetChatHistory(Guid chatId)
+    {
+        var strChatId = chatId.ToString();
+        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to get its history");
+        // get messages from database and send to client
+        // await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistory", chatHistory);
+    }
+
+    public async Task GetChatHistoryPaginated(PaginatedChatHistoryOptionsDto options)
+    {
+        var strChatId = options.ChatId.ToString();
+        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to leave it");
+        var chatOptions = ChatDtoMappers.ToChatHistoryOptions(options);
+        var chatHistoryResult = await _chatService.GetPaginatedChatHistory(chatOptions);
+
+        if (chatHistoryResult.IsSuccess)
+        {
+            // get proper DTO adn types here
+            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", chatHistoryResult.Value);
+        }
+        else
+        {
+            throw new HubException(chatHistoryResult.Message);
+        }
     }
 
     public async Task GetPreSignedUrlForChatImageUpload(ImageDetailsForUploadUrlDto imageDetails)

@@ -30,3 +30,9 @@ Like a little message shows up from the top right saying succesful login or some
 
 The source of truth for everything is the chatStore. We will have watchers on our store attributes so that each component reacts by itself.
 The parent component will not know anything about what chat is loaded or what not.
+
+## chat message sequencing
+
+can connect groups to every chat a user is in (only uses a bit of memory so no real resource usage)
+Then when someone uses a group, we can keep count on current sequence, with sequence tracking service (could maybe use that to give updates, push updates out for live notifications)
+Since the backend knows the latest message seqeunce for active chats it we have information to deal with cases when messages have not been saved but a user is trying to get newest history (continual retry or something, or at least be able to tell the user we are still fetching newest messages, we know what they exist even though we dont know what they are)

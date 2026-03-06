@@ -12,7 +12,7 @@ export type chatMessageDto = {
     messageSentAt: Date;
     messageSequenceNumber: Number;
     messageContent: string;
-    // idk if I should create nested structures for the final DTO or something like that
+    // we should create nested structures for these DTOs
 };
 
 // DTO for sending message, not getting history

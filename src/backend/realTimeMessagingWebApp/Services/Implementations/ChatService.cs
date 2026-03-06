@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using realTimeMessagingWebApp.Services.ArgumentOptions;
+using realTimeMessagingWebApp.Services.ResponseModels;
+using realTimeMessagingWebAppInfra.Persistence.Data;
 using realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebAppInfra.Persistence.Enums;
-using realTimeMessagingWebApp.Services.ResponseModels;
-using realTimeMessagingWebAppInfra.Persistence.Data;
+using static realTimeMessagingWebApp.Services.ArgumentOptions.Validators.ChatHistoryOptionsValidators;
 
 namespace realTimeMessagingWebApp.Services
 {
@@ -17,15 +19,15 @@ namespace realTimeMessagingWebApp.Services
         readonly ICustomRepository<Chat> _customRepository = customRepository ?? throw new InvalidOperationException($"Could not inject {nameof(ICustomRepository<Chat>)}");
         readonly RelationShipService _relationShipService = relationShipService ?? throw new InvalidOperationException($"Could not inject {nameof(RelationShipService)}");
 
-        public async Task<ServiceResult<Chat>> AddUserToChat(Guid chatId, Guid memberId) 
+        public async Task<ServiceResult> AddUserToChat(Guid chatId, Guid memberId) 
             => await AddUsersToChat(chatId, [memberId]);
 
-        public async Task<ServiceResult<Chat>> AddUsersToChat(Guid chatId, ICollection<Guid> memberIds)
+        public async Task<ServiceResult> AddUsersToChat(Guid chatId, ICollection<Guid> memberIds)
         {
             var actualChat = await _customRepository.GetFullEntityAsync(_context, chatId, true, gc => gc.ChatMembers);
             if (actualChat is null)
             {
-                return new ServiceResult<Chat>
+                return new ServiceResult
                 {
                     IsSuccess = false,
                     Message = $"Chat with ID {chatId} not found",
@@ -35,7 +37,7 @@ namespace realTimeMessagingWebApp.Services
             var existingMembers = actualChat.ChatMembers.Select(m => m.UserId).Intersect(memberIds).ToList();
             if (existingMembers.Count != 0)
             {
-                return new ServiceResult<Chat>
+                return new ServiceResult
                 {
                     IsSuccess = false,
                     Message = $"Some users are already members of the chat {actualChat.ChatName}",
@@ -48,11 +50,10 @@ namespace realTimeMessagingWebApp.Services
 
             if (!areAllFriends.IsSuccess)
             {
-                return new ServiceResult<Chat>
+                return new ServiceResult
                 {
                     IsSuccess = false,
-                    Message = "Not all users to be added are friends of the chat creator",
-                    Data = null
+                    Message = "Not all users to be added are friends of the chat creator"   
                 };
             }   
 
@@ -67,11 +68,10 @@ namespace realTimeMessagingWebApp.Services
                 {
                     _context.ChangeTracker.Clear(); // to avoid tracking issues
 
-                    return new ServiceResult<Chat>
+                    return new ServiceResult
                     {
                         IsSuccess = false,
-                        Message = $"User with ID {memberId} is not a friend of the chat creator and cannot be added",
-                        Data = null
+                        Message = $"User with ID {memberId} is not a friend of the chat creator and cannot be added"
                     };
                 }
 
@@ -87,11 +87,10 @@ namespace realTimeMessagingWebApp.Services
             }
 
             await _context.SaveChangesAsync();
-            return new ServiceResult<Chat>
+            return new ServiceResult
             {
                 IsSuccess = true,
-                Message = $"All users added to chat {actualChat.ChatName} successfully",
-                Data = actualChat // not sure if we need to send this
+                Message = $"All users added to chat {actualChat.ChatName} successfully"
             };
         }
 
@@ -223,7 +222,6 @@ namespace realTimeMessagingWebApp.Services
             };
         }
 
-
         public async Task<ServiceResult> RemoveOtherUserFromChat(Guid chatId, Guid memberId)
         {
             // assumes admin perms and are not removing self
@@ -284,7 +282,11 @@ namespace realTimeMessagingWebApp.Services
 
                 if (!addMemeberResult.IsSuccess)
                 {
-                    return addMemeberResult;
+                    return new ServiceResult<Chat>
+                    {
+                        IsSuccess = addMemeberResult.IsSuccess,
+                        Message = addMemeberResult.Message
+                    };
                 }
             }
 
@@ -352,6 +354,20 @@ namespace realTimeMessagingWebApp.Services
             throw new NotImplementedException();
         }
 
+        // new actual chat type in return method
+        public async Task<ServiceResult> GetPaginatedChatHistory(ChatHistoryOptions options)
+        {
+            if (!ChatHistoryOptionsValidator.IsValid(options))
+            {
+                return new ServiceResult
+                {
+                    IsSuccess = false,
+                    Message = "Invalid chat history options provided"
+                };
+            }
+
+
+        }
 
         #region Helpers
 
