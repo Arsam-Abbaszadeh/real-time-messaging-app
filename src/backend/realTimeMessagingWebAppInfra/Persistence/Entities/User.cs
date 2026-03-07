@@ -8,6 +8,7 @@ public class User
     public string UserProfileKey { get; set; } = string.Empty;
     public int UserProfileBucketKey { get; set; } // might be worth changin 
     public DateTime SignUpDate { get; set; }
+    public bool isDeleted { get; set; } = false;
     
     public ICollection<Chat> Chats { get; set; } = new HashSet<Chat>();
     

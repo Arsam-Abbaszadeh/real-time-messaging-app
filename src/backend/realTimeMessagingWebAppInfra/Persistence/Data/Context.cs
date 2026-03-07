@@ -23,6 +23,10 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql(uuidGenSql);
 
+        modelBuilder.Entity<User>()
+            .Property(e => e.isDeleted)
+            .HasDefaultValue(false);
+
         modelBuilder.Entity<Chat>()
             .Property(e => e.ChatId)
             .ValueGeneratedOnAdd()
@@ -48,6 +52,10 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql(uuidGenSql);
 
+        modelBuilder.Entity<Message>()
+            .HasIndex(m => new { m.ChatId, m.SequenceNumber })
+            .IsUnique();
+
         modelBuilder.Entity<MessageAttachment>()
             .Property(e => e.MessageAttachmentId)
             .ValueGeneratedOnAdd()
@@ -63,5 +71,22 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .HasMany(m => m.Attachments)
             .WithOne(ma => ma.Message)
             .HasForeignKey(ma => ma.MessageId);
+
+        modelBuilder.Entity<Chat>()
+            .HasMany(c => c.Messages)
+            .WithOne(m => m.Chat)
+            .HasForeignKey(m => m.ChatId);
+
+        modelBuilder.Entity<Chat>()
+            .HasOne(c => c.ChatCreator)
+            .WithMany()
+            .HasForeignKey(c => c.ChatCreatorId)
+            .OnDelete(DeleteBehavior.Restrict); // will soft delete users
+
+        modelBuilder.Entity<Chat>()
+            .HasOne(c => c.ChatAdmin)
+            .WithMany()
+            .HasForeignKey(c => c.ChatAdminId)
+            .OnDelete(DeleteBehavior.Restrict); // TODO check if we have admin reassignement logic for when admin is soft deleted
     }
 }

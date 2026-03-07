@@ -36,3 +36,7 @@ The parent component will not know anything about what chat is loaded or what no
 can connect groups to every chat a user is in (only uses a bit of memory so no real resource usage)
 Then when someone uses a group, we can keep count on current sequence, with sequence tracking service (could maybe use that to give updates, push updates out for live notifications)
 Since the backend knows the latest message seqeunce for active chats it we have information to deal with cases when messages have not been saved but a user is trying to get newest history (continual retry or something, or at least be able to tell the user we are still fetching newest messages, we know what they exist even though we dont know what they are)
+
+## Table indexes
+
+You in general need to add a lot of indexes to your tables, in a real app your stuff would be really slow.

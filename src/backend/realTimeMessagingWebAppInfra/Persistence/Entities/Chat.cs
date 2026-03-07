@@ -14,6 +14,7 @@ public class Chat
     
     // nav properties
     public ICollection<User> ChatMembers { get; set; } = new HashSet<User>();
+    public IEnumerable<Message> Messages { get; set; } = [];
 
     public User ChatCreator; // add GC creator and GC admin as nav properties
 
