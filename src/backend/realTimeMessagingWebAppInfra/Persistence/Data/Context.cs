@@ -56,6 +56,13 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .HasIndex(m => new { m.ChatId, m.SequenceNumber })
             .IsUnique();
 
+        modelBuilder.Entity<Message>()
+            .Property(e => e.SequenceNumber)
+            .HasColumnType("int");
+
+        modelBuilder.Entity<Message>()
+            .ToTable(b => b.HasCheckConstraint("CK_Message_SequenceNumber_NonNegative", "\"SequenceNumber\" >= 0"));
+
         modelBuilder.Entity<MessageAttachment>()
             .Property(e => e.MessageAttachmentId)
             .ValueGeneratedOnAdd()

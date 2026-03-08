@@ -24,7 +24,7 @@ namespace realTimeMessagingWebApp.Services
 
         // Make data object for this and then make stored proc to retrieve.
         // also have correct error handeling for trying to access illegal sequence numbers
-        public Task<ServiceResult> GetPaginatedChatHistory(ChatHistoryOptions options);
+        public Task<ServiceResult<List<Message>>> GetPaginatedChatHistory(ChatHistoryOptions options);
 
         public Task<ServiceResult<Chat>> CreateAndAddMembersToChat(Chat chat, Guid Creator, Guid? admin, ICollection<Guid> memberIds);
         public Task<ServiceResult<ICollection<Chat>>> GetUserChats(Guid userId);

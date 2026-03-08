@@ -355,18 +355,24 @@ namespace realTimeMessagingWebApp.Services
         }
 
         // new actual chat type in return method
-        public async Task<ServiceResult> GetPaginatedChatHistory(ChatHistoryOptions options)
+        public async Task<ServiceResult<List<Message>>> GetPaginatedChatHistory(ChatHistoryOptions options)
         {
             if (!ChatHistoryOptionsValidator.IsValid(options))
             {
-                return new ServiceResult
+                return new ServiceResult<List<Message>>
                 {
                     IsSuccess = false,
                     Message = "Invalid chat history options provided"
                 };
             }
 
+            if (options.EndMessageIsLast)
 
+            return new ServiceResult<List<Message>>
+            {
+                IsSuccess = true,
+                Data = messages
+            };
         }
 
         #region Helpers
@@ -376,13 +382,11 @@ namespace realTimeMessagingWebApp.Services
             // assumes many values are already set in the chat entity
             chat.CreationDate = DateTime.UtcNow;
             chat.ChatAdminId = chat.ChatCreatorId;
-            chat.ChatId = Guid.NewGuid();
             chat.ChatCreatorId = creatorId;
             await _context.Chats.AddAsync(chat);
 
             var connector = new ChatConnector
             {
-                ChatConnectorId = Guid.NewGuid(),
                 ChatId = chat.ChatId,
                 UserId = creatorId,
                 JoinDate = chat.CreationDate
