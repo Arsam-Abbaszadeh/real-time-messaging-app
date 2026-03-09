@@ -10,9 +10,9 @@ namespace realTimeMessagingWebApp.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ChatController(IChatService chatService, IAuthService authService) : ControllerBase
+public class ChatController(IChatUserService chatService, IAuthService authService) : ControllerBase
 {
-    readonly IChatService _chatService = chatService;
+    readonly IChatUserService _chatService = chatService;
     readonly IAuthService _authService = authService;
 
     [Authorize]

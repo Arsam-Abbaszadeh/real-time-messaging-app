@@ -19,7 +19,7 @@ public sealed class ChatHub(
     IMessageSequenceTrackerService sequenceService,
     IKafkaProducerService kafkaProducerService,
     IObjectStorageService ObjectStorageService,
-    IChatService chatService,
+    IChatUserService chatService,
     IOptions<KafkaConfigurations> KafkaConfigurations
 ) : Hub
 {
@@ -27,7 +27,7 @@ public sealed class ChatHub(
     readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead
     readonly IKafkaProducerService _kafkaProducerService = kafkaProducerService;
     readonly IObjectStorageService _objectStorageService = ObjectStorageService;
-    readonly IChatService _chatService = chatService;
+    readonly IChatUserService _chatService = chatService;
     readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations.Value;
 
     readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> rooms = []; // chatId, (signalR connectionIds, filler byte value)

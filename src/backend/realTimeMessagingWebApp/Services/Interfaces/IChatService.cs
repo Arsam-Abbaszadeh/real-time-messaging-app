@@ -1,32 +1,14 @@
-using realTimeMessagingWebAppInfra.Persistence.Entities;
+﻿using realTimeMessagingWebApp.Services.ArgumentOptions;
 using realTimeMessagingWebApp.Services.ResponseModels;
-using realTimeMessagingWebApp.Services.ArgumentOptions;
+using realTimeMessagingWebAppInfra.Persistence.Entities;
 
+namespace realTimeMessagingWebApp.Services.Interfaces;
 
-
-namespace realTimeMessagingWebApp.Services
+public interface IChatService
 {
-    public interface IChatService
-    {
-        public Task<ServiceResult> AssignChatAdmin(Guid chatId, Guid newAdminId);
+    public Task<ServiceResult<IList<Message>>> GetPaginatedChatHistory(ChatHistoryOptions options);
 
-        public Task<ServiceResult> AddUserToChat(Guid chatId, Guid member);
+    public Task<ServiceResult<IList<Message>>> GetTopNChatMessages(Guid chatId, int range);
 
-        public Task<ServiceResult> AddUsersToChat(Guid chatId, ICollection<Guid> memberIds);
-
-        public Task<ServiceResult> ChangeChatAdmin(Guid chatId, Guid memberId);
-
-        public Task<ServiceResult> RemoveSelfFromChat(Guid chatId, Guid userId, bool? isAdmin = null);
-
-        public Task<ServiceResult> RemoveOtherUserFromChat(Guid chatId, Guid memberId);
-
-        public Task<ServiceResult> DeleteChat(Guid chatId);
-
-        // Make data object for this and then make stored proc to retrieve.
-        // also have correct error handeling for trying to access illegal sequence numbers
-        public Task<ServiceResult<List<Message>>> GetPaginatedChatHistory(ChatHistoryOptions options);
-
-        public Task<ServiceResult<Chat>> CreateAndAddMembersToChat(Chat chat, Guid Creator, Guid? admin, ICollection<Guid> memberIds);
-        public Task<ServiceResult<ICollection<Chat>>> GetUserChats(Guid userId);
-    }
+    public Task<ServiceResult<IList<Chat>>> GetUserChats(Guid userId);
 }

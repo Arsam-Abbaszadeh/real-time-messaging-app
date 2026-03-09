@@ -8,5 +8,4 @@ public sealed record ChatHistoryOptions
 
     // to get the last message instead of failing if endMessageSequence overshoots
     public bool EndFallBackToMaxInt { get; init; } = false;
-    public bool EndMessageIsLast { get; init; } = false;
 }
