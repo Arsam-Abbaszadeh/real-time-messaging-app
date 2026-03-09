@@ -4,7 +4,7 @@
 
 namespace realTimeMessagingWebApp.Migrations
 {
-    /// <inheritdoc />
+    // hand written migration
     public partial class writesqlfunctionforpaginatedmessageretrival : Migration
     {
         /// <inheritdoc />
