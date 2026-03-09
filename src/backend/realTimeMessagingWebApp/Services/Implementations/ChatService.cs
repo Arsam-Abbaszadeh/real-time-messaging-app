@@ -4,6 +4,8 @@ using realTimeMessagingWebApp.Services.Interfaces;
 using realTimeMessagingWebApp.Services.ResponseModels;
 using realTimeMessagingWebAppInfra.Persistence.Data;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
+using realTimeMessagingWebApp.Services.Constants;
+using Npgsql;
 
 namespace realTimeMessagingWebApp.Services.Implementations;
 
@@ -15,7 +17,7 @@ public class ChatService(
 
     public async Task<ServiceResult<IList<Message>>> GetPaginatedChatHistory(ChatHistoryOptions options)
     {
-        if (options.EndMessageSequence.HasValue && options.EndMessageSequence.Value < options.StartMessageSequence)
+        if (options.EndMessageSequence < options.StartMessageSequence && options.EndMessageSequence != ServiceConstants.ChatService.EndmessageSequence)
         {
             return new ServiceResult<IList<Message>>
             {
@@ -24,7 +26,7 @@ public class ChatService(
             };
         }
 
-        if (!(!options.EndFallBackToMaxInt && !options.EndMessageSequence.HasValue))
+        if (options.EndFallBackToMaxInt || options.EndMessageSequence != ServiceConstants.ChatService.EndmessageSequence)
         {
             try
             {
@@ -33,7 +35,7 @@ public class ChatService(
                        EXEC GetPaginatedChatHistoryWithEndAsLast 
                                {options.ChatId},
                                {options.StartMessageSequence}, 
-                               {options!.EndMessageSequence},
+                               {options.EndMessageSequence},
                                {options.EndFallBackToMaxInt}")
                        .ToListAsync();
 
@@ -44,13 +46,12 @@ public class ChatService(
                 };
             }
 
-            // TODO, verify if sql call throws error on fail read and if so make catch more specific
-            catch (Exception ex) // probs should be specific ef core sql exception
+            catch (PostgresException ex)
             {
                 return new ServiceResult<IList<Message>>
                 {
                     IsSuccess = false,
-                    Message = $"An error occurred while fetching chat history: {ex.Message}"
+                    Message = $"Postgres error occured: {ex.Message}"
                 };
             }
         }
@@ -78,8 +79,15 @@ public class ChatService(
         };
     }
         
-    public Task<ServiceResult<IList<Chat>>> GetUserChats(Guid userId)
+    public async Task<ServiceResult<IList<Chat>>> GetUserChats(Guid userId)
     {
-        throw new NotImplementedException();
+        var chats = await _context.Chats
+            .Where(cc => cc.ChatMembers.Any(cm => cm.UserId == userId)).ToListAsync();
+
+        return new ServiceResult<IList<Chat>>
+        {
+            IsSuccess = true,
+            Data = chats
+        };
     }
 }
