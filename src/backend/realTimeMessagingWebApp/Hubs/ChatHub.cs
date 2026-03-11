@@ -19,7 +19,7 @@ public sealed class ChatHub(
     IMessageSequenceTrackerService sequenceService,
     IKafkaProducerService kafkaProducerService,
     IObjectStorageService ObjectStorageService,
-    IChatUserService chatService,
+    IChatService chatService,
     IOptions<KafkaConfigurations> KafkaConfigurations
 ) : Hub
 {
@@ -27,7 +27,7 @@ public sealed class ChatHub(
     readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead
     readonly IKafkaProducerService _kafkaProducerService = kafkaProducerService;
     readonly IObjectStorageService _objectStorageService = ObjectStorageService;
-    readonly IChatUserService _chatService = chatService;
+    readonly IChatService _chatService = chatService;
     readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations.Value;
 
     readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> rooms = []; // chatId, (signalR connectionIds, filler byte value)
@@ -66,14 +66,6 @@ public sealed class ChatHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, strChatId);
     }
 
-    public async Task GetChatHistory(Guid chatId)
-    {
-        var strChatId = chatId.ToString();
-        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to get its history");
-        // get messages from database and send to client
-        // await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistory", chatHistory);
-    }
-
     public async Task GetChatHistoryPaginated(PaginatedChatHistoryOptionsDto options)
     {
         var strChatId = options.ChatId.ToString();
@@ -84,11 +76,28 @@ public sealed class ChatHub(
         if (chatHistoryResult.IsSuccess)
         {
             // get proper DTO adn types here
-            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", chatHistoryResult.Value);
+            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", chatHistoryResult);
         }
         else
         {
             throw new HubException(chatHistoryResult.Message);
+        }
+    }
+
+    public async Task GetRecentChatHistory(Guid chatId, int range)
+    {
+        var strChatId = chatId.ToString();
+        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to get its history");
+        var historyResult = await _chatService.GetTopNChatMessages(chatId, range);
+
+        if (historyResult.IsSuccess)
+        {
+            // get proper DTO adn types here
+            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", historyResult);
+        }
+        else
+        {
+            throw new HubException(historyResult.Message);
         }
     }
 
@@ -151,5 +160,7 @@ public sealed class ChatHub(
     {
         return rooms.TryGetValue(chatId, out ConcurrentDictionary<string, byte>? value) || (value is not null && !value.ContainsKey(Context.ConnectionId));
     }
+
+
     #endregion
 }

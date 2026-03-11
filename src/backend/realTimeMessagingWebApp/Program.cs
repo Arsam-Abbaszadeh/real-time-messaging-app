@@ -26,6 +26,7 @@ builder.Services.AddRealtimeMessagingWebAppContext(connectionString);
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IChatUserService, ChatUserService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFriendShipRequestService, FriendShipRequestService>();
 builder.Services.AddScoped<ICustomRepository<Chat>, ChatRepositry>();

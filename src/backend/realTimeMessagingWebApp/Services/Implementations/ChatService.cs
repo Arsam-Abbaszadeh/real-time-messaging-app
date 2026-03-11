@@ -1,13 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using realTimeMessagingWebApp.Services.ArgumentOptions;
-using realTimeMessagingWebApp.Services.Interfaces;
 using realTimeMessagingWebApp.Services.ResponseModels;
 using realTimeMessagingWebAppInfra.Persistence.Data;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebApp.Services.Constants;
 using Npgsql;
 
-namespace realTimeMessagingWebApp.Services.Implementations;
+namespace realTimeMessagingWebApp.Services;
 
 public class ChatService(
     Context dbContext)
@@ -30,13 +29,15 @@ public class ChatService(
         {
             try
             {
+                // TODO .include makes life easier but also changing postgres function to use form DTO and reutns message attachements as JSON objects
                 var messages = await _context.Messages
                        .FromSqlInterpolated($@"
-                       EXEC GetPaginatedChatHistoryWithEndAsLast 
+                       EXEC GetPaginatedChatHistory
                                {options.ChatId},
                                {options.StartMessageSequence}, 
                                {options.EndMessageSequence},
                                {options.EndFallBackToMaxInt}")
+                       .Include(m => m.Attachments)
                        .ToListAsync();
 
                 return new ServiceResult<IList<Message>>
@@ -70,6 +71,7 @@ public class ChatService(
             .Where(m => m.ChatId == chatId)
             .OrderByDescending(m => m.SequenceNumber)
             .Take(range)
+            .Include(m => m.Attachments)
             .ToListAsync();
 
         return new ServiceResult<IList<Message>>

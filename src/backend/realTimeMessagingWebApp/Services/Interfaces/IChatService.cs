@@ -2,7 +2,7 @@
 using realTimeMessagingWebApp.Services.ResponseModels;
 using realTimeMessagingWebAppInfra.Persistence.Entities;
 
-namespace realTimeMessagingWebApp.Services.Interfaces;
+namespace realTimeMessagingWebApp.Services;
 
 public interface IChatService
 {
