@@ -10,6 +10,7 @@ using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebAppInfra.Storage.Constants;
 using realTimeMessagingWebAppInfra.Storage.Services;
 using realTimeMessagingWebAppInfra.Storage.Utilities;
+using static realTimeMessagingWebApp.Services.ArgumentOptions.Validators.ChatHistoryOptionsValidators;
 
 namespace realTimeMessagingWebApp.Hubs;
 
@@ -24,7 +25,7 @@ public sealed class ChatHub(
 ) : Hub
 {
     readonly IAuthService _authService = authService;
-    readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead
+    readonly IMessageSequenceTrackerService _sequenceService = sequenceService; // maybe should make singleton, to not have instance making overhead, TODO: make decision on this
     readonly IKafkaProducerService _kafkaProducerService = kafkaProducerService;
     readonly IObjectStorageService _objectStorageService = ObjectStorageService;
     readonly IChatService _chatService = chatService;
@@ -39,7 +40,7 @@ public sealed class ChatHub(
         if (!UserHasJoinedChat(strChatId))
         {
             var userIdString = Context.User?.Claims.First(c => c.Type == "id")?.Value;
-            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            var userId = Guid.Parse(userIdString!);
             var isMember = await _authService.UserIsChatMember(userId, chatId);
             if (!isMember.IsSuccess)
             {
@@ -71,6 +72,10 @@ public sealed class ChatHub(
         var strChatId = options.ChatId.ToString();
         ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to leave it");
         var chatOptions = ChatDtoMappers.ToChatHistoryOptions(options);
+        if (!ChatHistoryOptionsValidator.IsValid(chatOptions))
+        {
+            throw new HubException("Invalid chat options.");
+        }
         var chatHistoryResult = await _chatService.GetPaginatedChatHistory(chatOptions);
 
         if (chatHistoryResult.IsSuccess)
@@ -87,7 +92,7 @@ public sealed class ChatHub(
     public async Task GetRecentChatHistory(Guid chatId, int range)
     {
         var strChatId = chatId.ToString();
-        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to get its history");
+        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to get its history.");
         var historyResult = await _chatService.GetTopNChatMessages(chatId, range);
 
         if (historyResult.IsSuccess)

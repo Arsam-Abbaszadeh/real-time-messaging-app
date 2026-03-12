@@ -33,7 +33,6 @@ namespace realTimeMessagingWebApp.DTOMappers
                 StartMessageSequence = optionsDto.StartMessageSequence,
                 EndMessageSequence = optionsDto.EndMessageSequence,
                 EndFallBackToMaxInt = optionsDto.EndFallBackToMaxInt,
-                EndMessageIsLast = optionsDto.EndMessageIsLast,
             };
         }
     }

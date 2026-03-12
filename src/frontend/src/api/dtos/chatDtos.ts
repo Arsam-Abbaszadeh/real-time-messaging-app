@@ -4,6 +4,7 @@ export type chatSummaryDto = {
     chatImageUrl: string;
 };
 
+// DTO for getting chat message history
 export type chatMessageDto = {
     chatId: string;
     messageSenderId: string;
@@ -12,7 +13,15 @@ export type chatMessageDto = {
     messageSentAt: Date;
     messageSequenceNumber: Number;
     messageContent: string;
-    // we should create nested structures for these DTOs
+    messageAttachments: chatMessageAttachment[];
+};
+
+// DTO for attachement retrieval
+export type chatMessageAttachment = {
+    attachementId: string;
+    messageId: string; // not sure I need this
+    attachmentUrl: string;
+    attachmentMimeType: string;
 };
 
 // DTO for sending message, not getting history
@@ -29,3 +38,5 @@ export type imageDetailsForUploadUrlDto = {
     fileExtension: string;
     fileType: string;
 };
+
+export type ChatHistoryOptionsPaginatedDto = {};

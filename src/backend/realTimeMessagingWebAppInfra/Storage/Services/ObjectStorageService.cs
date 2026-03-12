@@ -181,7 +181,7 @@ public class ObjectStorageService(
         {
             return $"{_bucketOptions.PublicBucketUrl}/{objectKey}";
         }
-        else // assumes only other bucket is private
+        else 
         {
             var presignedUrlRequest = new GetPreSignedUrlRequest
             {

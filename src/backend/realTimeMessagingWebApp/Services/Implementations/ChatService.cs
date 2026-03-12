@@ -29,7 +29,7 @@ public class ChatService(
         {
             try
             {
-                // TODO .include makes life easier but also changing postgres function to use form DTO and reutns message attachements as JSON objects
+                // intentionally made a postgres function with logic in it instead of doing logic in code to learn more about postgres
                 var messages = await _context.Messages
                        .FromSqlInterpolated($@"
                        EXEC GetPaginatedChatHistory

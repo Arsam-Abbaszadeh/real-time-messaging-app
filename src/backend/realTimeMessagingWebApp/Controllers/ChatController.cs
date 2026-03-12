@@ -211,24 +211,4 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
             });
         }
     }
-
-    [Authorize]
-    [HttpGet("chatdsummaries")]
-    public async Task<ActionResult<List<ChatSummaryDto>>> getChats()
-    {
-        var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!);
-
-        var chatsResult = await _chatService.GetUserChats(userId);
-        if (!chatsResult.IsSuccess || chatsResult.Data is null)
-        {
-            return NotFound();
-        }
-
-        var chatSummaries = chatsResult.Data
-            .Select(ChatDtoMappers.ToChatSummaryDto)
-            .ToList();
-
-        return Ok(chatSummaries);
-    }
 }

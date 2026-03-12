@@ -6,7 +6,8 @@ public static class ChatHistoryOptionsValidators
     {
         public static bool IsValid(ChatHistoryOptions options)
             => options.ChatId != Guid.Empty
-                && (options.EndMessageIsLast || options.EndMessageSequence.HasValue)
-                && (!options.EndMessageSequence.HasValue || options.EndMessageSequence >= options.StartMessageSequence);
+                && (options.EndMessageSequence!= -1 || options.EndFallBackToMaxInt)
+                && options.StartMessageSequence >= 0
+                && (options.StartMessageSequence == -1 || options.EndMessageSequence > options.StartMessageSequence);
     }
 }

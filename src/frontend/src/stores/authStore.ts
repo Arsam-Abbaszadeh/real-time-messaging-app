@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, ref, type Ref } from 'vue';
+import { computed, ref } from 'vue';
 import { requestNewAccessToken, requestlogin } from '@/api/authRequests';
 import { ApiError } from '@/api/httpRequests';
 import { isErrorWithMessage } from '@/utils/errorHelpers';
@@ -11,13 +11,13 @@ export const useAuthStore = defineStore('auth', () => {
     const accessToken = ref<string | null>(null);
     const accessTokenExpiry = ref<Date | null>(null);
     // getters
-    const hasValidToken = computed(()=> {
+    const hasValidToken = computed(() => {
         if (accessToken.value === null) {
-            return false
+            return false;
         }
-        const date = new Date()
-        return date.toUTCString()
-    })
+        const date = new Date();
+        return date.toUTCString();
+    });
     // actions
     async function login(username: string, password: string): Promise<authResult> {
         // add return type object
