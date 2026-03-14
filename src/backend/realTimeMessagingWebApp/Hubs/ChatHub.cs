@@ -6,7 +6,6 @@ using realTimeMessagingWebApp.Configurations;
 using realTimeMessagingWebApp.DTOMappers;
 using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Services;
-using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebAppInfra.Storage.Constants;
 using realTimeMessagingWebAppInfra.Storage.Services;
 using realTimeMessagingWebAppInfra.Storage.Utilities;
@@ -21,6 +20,7 @@ public sealed class ChatHub(
     IKafkaProducerService kafkaProducerService,
     IObjectStorageService ObjectStorageService,
     IChatService chatService,
+    IDtoAssemblerService dtoAssemblerService,
     IOptions<KafkaConfigurations> KafkaConfigurations
 ) : Hub
 {
@@ -29,6 +29,7 @@ public sealed class ChatHub(
     readonly IKafkaProducerService _kafkaProducerService = kafkaProducerService;
     readonly IObjectStorageService _objectStorageService = ObjectStorageService;
     readonly IChatService _chatService = chatService;
+    readonly IDtoAssemblerService _dtoAssemblerService = dtoAssemblerService;
     readonly KafkaConfigurations _kafkaConfigurations = KafkaConfigurations.Value;
 
     readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> rooms = []; // chatId, (signalR connectionIds, filler byte value)
@@ -76,16 +77,16 @@ public sealed class ChatHub(
         {
             throw new HubException("Invalid chat options.");
         }
-        var chatHistoryResult = await _chatService.GetPaginatedChatHistory(chatOptions);
+        var historyResult = await _chatService.GetPaginatedChatHistory(chatOptions);
 
-        if (chatHistoryResult.IsSuccess)
+        if (historyResult.IsSuccess)
         {
-            // get proper DTO adn types here
-            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", chatHistoryResult);
+            var historyDtos = await _dtoAssemblerService.AssembleMessageDtosFromMessages(historyResult.Data!);
+            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", historyDtos);
         }
         else
         {
-            throw new HubException(chatHistoryResult.Message);
+            throw new HubException(historyResult.Message);
         }
     }
 
@@ -97,8 +98,8 @@ public sealed class ChatHub(
 
         if (historyResult.IsSuccess)
         {
-            // get proper DTO adn types here
-            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", historyResult);
+            var historyDtos = await _dtoAssemblerService.AssembleMessageDtosFromMessages(historyResult.Data!);
+            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", historyDtos);
         }
         else
         {
@@ -114,7 +115,7 @@ public sealed class ChatHub(
         var objectKey = ObjectStorageUtilities.GenerateObjectKeyForChatFile(
             imageDetails.UserId, imageDetails.ChatId, imageDetails.FileExtension);
 
-        var userId = Guid.Parse(Context.User?.Claims.First(c => c.Type == "id")?.Value);
+        var userId = Guid.Parse(Context.User!.Claims.First(c => c.Type == "id")!.Value);
         var presignedUrl = await _objectStorageService.CreateObjectUrlForClientUploadAsync(
             BucketKeys.Private, objectKey, imageDetails.FileType);
 

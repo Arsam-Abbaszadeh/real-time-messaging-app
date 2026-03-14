@@ -9,6 +9,7 @@ using realTimeMessagingWebAppInfra.Persistence.Entities;
 using realTimeMessagingWebAppInfra.Persistence.Extensions;
 using realTimeMessagingWebAppInfra.Persistence.Data.Repository;
 using realTimeMessagingWebAppInfra.Storage.Extensions;
+using realTimeMessagingWebAppInfra.Storage.Services;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFriendShipRequestService, FriendShipRequestService>();
 builder.Services.AddScoped<ICustomRepository<Chat>, ChatRepositry>();
 builder.Services.AddScoped<IMessageSequenceTrackerService, MessageSequenceTrackerService>();
+builder.Services.AddScoped<IObjectStorageService, ObjectStorageService>();
+builder.Services.AddScoped<IDtoAssemblerService, DtoAssemblerService>();
 builder.Services.AddScoped<RelationShipService>();
 
 builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
