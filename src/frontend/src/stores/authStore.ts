@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { requestNewAccessToken, requestlogin } from '@/api/authRequests';
-import { ApiError } from '@/api/httpRequests';
+import { requestNewAccessToken, requestlogin } from '@/api/http/authRequests';
+import { ApiError } from '@/api/http/httpRequests';
 import { isErrorWithMessage } from '@/utils/errorHelpers';
 import type { LoginRequestDto } from '@/api/dtos/authDtos';
 import type { authResult } from './types/authStoreTypes';

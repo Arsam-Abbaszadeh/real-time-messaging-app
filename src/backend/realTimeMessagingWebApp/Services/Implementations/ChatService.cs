@@ -80,7 +80,8 @@ public class ChatService(
             Data = messages
         };
     }
-        
+    
+    // TODO: implement a pagianted versino of this and use it
     public async Task<ServiceResult<IList<Chat>>> GetUserChats(Guid userId)
     {
         var chats = await _context.Chats

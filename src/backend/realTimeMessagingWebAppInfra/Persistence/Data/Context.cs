@@ -24,7 +24,7 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .HasDefaultValueSql(uuidGenSql);
 
         modelBuilder.Entity<User>()
-            .Property(e => e.isDeleted)
+            .Property(e => e.IsDeleted)
             .HasDefaultValue(false);
 
         modelBuilder.Entity<Chat>()
@@ -46,6 +46,10 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .Property(e => e.Id)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql(uuidGenSql);
+        
+        modelBuilder.Entity<RefreshToken>()
+            .Property(e => e.isValid)
+            .HasDefaultValue(true);
 
         modelBuilder.Entity<Message>()
             .Property(e => e.MessageId)

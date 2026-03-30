@@ -4,7 +4,7 @@ import type {
     LoginResponseDto,
     CreateAccountRequestDto,
     UserSummaryDto,
-} from './dtos';
+} from '../index.ts';
 import { HEADERS, HEADER_VALUES } from './httpRequestHeaderConstants.ts';
 
 export async function requestlogin(dto: LoginRequestDto): Promise<LoginResponseDto> {

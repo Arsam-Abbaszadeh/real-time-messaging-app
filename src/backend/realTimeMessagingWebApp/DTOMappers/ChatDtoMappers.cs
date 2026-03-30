@@ -24,16 +24,5 @@ namespace realTimeMessagingWebApp.DTOMappers
                 ChatImageUrl = chat.ChatImageUrl,
             };
         }
-
-        public static ChatHistoryOptions ToChatHistoryOptions(PaginatedChatHistoryOptionsDto optionsDto)
-        {
-            return new ChatHistoryOptions
-            {
-                ChatId = optionsDto.ChatId,
-                StartMessageSequence = optionsDto.StartMessageSequence,
-                EndMessageSequence = optionsDto.EndMessageSequence,
-                EndFallBackToMaxInt = optionsDto.EndFallBackToMaxInt,
-            };
-        }
     }
 }

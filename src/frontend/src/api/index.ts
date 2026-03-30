@@ -3,8 +3,8 @@ import type {
     LoginResponseDto,
     CreateAccountRequestDto,
     UserSummaryDto,
-} from './authDtos';
-import type { chatSummaryDto } from './chatDtos';
+} from './dtos/authDtos';
+import type { chatSummaryDto } from './dtos/chatDtos';
 
 export type {
     LoginRequestDto,

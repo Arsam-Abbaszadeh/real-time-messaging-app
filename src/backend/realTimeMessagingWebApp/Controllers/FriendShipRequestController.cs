@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
 using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.Services;
+using realTimeMessagingWebApp.Utilities;
 
 namespace realTimeMessagingWebApp.Controllers
 {
@@ -16,8 +17,7 @@ namespace realTimeMessagingWebApp.Controllers
         [HttpPost("newfriendrequest")]
         public async Task<ActionResult<RequestResponse>> NewFriendRequest([FromBody] NewFriendRequestDto friendRequestDto)
         {
-            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            var userId = User.GetUserId();
 
             var result = await _friendShipRequestService.MakeFriendShipRequest(userId, friendRequestDto.Friendid);
             if (result.IsSuccess)
@@ -42,8 +42,7 @@ namespace realTimeMessagingWebApp.Controllers
         [HttpPatch("friendShipRequest/{requestId}")]
         public async Task<ActionResult<RequestResponse>> AcceptFriendRequest(Guid requestId)
         {
-            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            var userId = User.GetUserId();
 
             var result = await _friendShipRequestService.AcceptFriendShipRequest(userId, requestId);
 
@@ -69,8 +68,7 @@ namespace realTimeMessagingWebApp.Controllers
         [HttpDelete("friendShipRequest/{requestId}")]
         public async Task<ActionResult<RequestResponse>> DeclineFriendRequest(Guid requestId)
         {
-            var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-            var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+            var userId = User.GetUserId();
 
             var result = await _friendShipRequestService.DeclineFriendShipRequest(userId, requestId);
             if (result.IsSuccess)

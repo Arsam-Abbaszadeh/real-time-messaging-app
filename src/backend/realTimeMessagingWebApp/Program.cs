@@ -72,7 +72,7 @@ builder.Services.AddControllers()
     });
 // consider adding options later, like try reconnection or whatever
 // Will probs need to add JSON serailzation options given we are using DTOs,
-    // check out https://learn.microsoft.com/en-us/aspnet/core/signalr/configuration?view=aspnetcore-10.0&tabs=dotnet
+// check out https://learn.microsoft.com/en-us/aspnet/core/signalr/configuration?view=aspnetcore-10.0&tabs=dotnet
 // may have to configure CORS, but idk yet
 builder.Services.AddSignalR(); 
 
@@ -151,7 +151,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<ChatHub>(chatHubPath);
+app.MapHub<ChatHub>(chatHubPath, options => { options.CloseOnAuthenticationExpiration = true; });
 app.MapControllers();
 //app.UseHttpsRedirection(); // dont need for now
 

@@ -3,27 +3,28 @@ using Microsoft.AspNetCore.Mvc;
 using realTimeMessagingWebApp.Controllers.ResponseModels;
 using realTimeMessagingWebApp.DTOMappers;
 using realTimeMessagingWebApp.DTOs;
-using realTimeMessagingWebAppInfra.Persistence.Entities;
+using realTimeMessagingWebApp.Controllers.QureyParamObjects;
 using realTimeMessagingWebApp.Services;
+using realTimeMessagingWebApp.Utilities;
 
 namespace realTimeMessagingWebApp.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ChatController(IChatUserService chatService, IAuthService authService) : ControllerBase
+public class ChatController(IChatUserService chatUserService, IAuthService authService, IChatService chatService) : ControllerBase
 {
-    readonly IChatUserService _chatService = chatService;
+    readonly IChatUserService _chatUserService = chatUserService;
     readonly IAuthService _authService = authService;
+    readonly IChatService _chatService = chatService;
 
     [Authorize]
     [HttpPost("newchat")]
     public async Task<ActionResult<RequestResponse>> CreateNewChat([FromBody] CreateChatDto chatDto)
     {
-        var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+        var userId = User.GetUserId();
 
         var newChat = ChatDtoMappers.ToChatEntity(chatDto);
-        var chatResult = await _chatService.CreateAndAddMembersToChat(newChat, userId, chatDto.Admin, chatDto.ChatMembers);
+        var chatResult = await _chatUserService.CreateAndAddMembersToChat(newChat, userId, chatDto.Admin, chatDto.ChatMembers);
 
         if (chatResult.IsSuccess)
         {
@@ -48,8 +49,7 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
     [HttpPost("{chatId}")]
     public async Task<ActionResult<RequestResponse>> AddMembersToChat([FromRoute] Guid chatId, [FromBody] ICollection<Guid> newMemberIds)
     {
-        var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+        var userId = User.GetUserId();
         var authResult = await _authService.UserIsChatAdmin(userId, chatId);
 
         if (!authResult.IsSuccess)
@@ -61,7 +61,7 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
             });
         }
 
-        var addMembersResult = await _chatService.AddUsersToChat(chatId, newMemberIds);
+        var addMembersResult = await _chatUserService.AddUsersToChat(chatId, newMemberIds);
         if (addMembersResult.IsSuccess)
         {
             return Ok(new RequestResponse
@@ -86,8 +86,7 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
     [HttpDelete("{chatId}")]
     public async Task<ActionResult<RequestResponse>> DeleteChat([FromRoute] Guid chatId)
     {
-        var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+        var userId = User.GetUserId();
 
         var authResult = await _authService.UserIsChatAdmin(userId, chatId);
         if (!authResult.IsSuccess)
@@ -99,7 +98,7 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
             });
         }
 
-        var deleteResult = await _chatService.DeleteChat(chatId);
+        var deleteResult = await _chatUserService.DeleteChat(chatId);
         if (deleteResult.IsSuccess)
         {
             return Ok(new RequestResponse
@@ -122,14 +121,13 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
     [HttpDelete("{chatId}/members/{memberId}")]
     public async Task<ActionResult<RequestResponse>> RemoveMemberFromChat([FromRoute] Guid chatId, [FromRoute] Guid memberId)
     {
-        var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!); // should not be null if token is validated
+        var userId = User.GetUserId();
         //var isSelfAction = _authService.IsSelfActionOnChat(userId, memberId, chatId);
         var userStatusResult = await _authService.GetChatAuthStatus(userId, memberId, chatId);
 
         if (userStatusResult.IsSelfAction)
         {
-            var selfRemoveResult = await _chatService.RemoveSelfFromChat(chatId, userId, userStatusResult.IsAdmin);
+            var selfRemoveResult = await _chatUserService.RemoveSelfFromChat(chatId, userId, userStatusResult.IsAdmin);
             if (selfRemoveResult.IsSuccess)
             {
                 return Ok(new RequestResponse
@@ -149,7 +147,7 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
         }
         else if (userStatusResult.IsAdmin) // user is admin and removing other user
         {
-            var removeOtherResult = await _chatService.RemoveOtherUserFromChat(chatId, memberId);
+            var removeOtherResult = await _chatUserService.RemoveOtherUserFromChat(chatId, memberId);
             if (removeOtherResult.IsSuccess)
             {
                 return Ok(new RequestResponse
@@ -181,8 +179,7 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
     [HttpPatch("{chatId}/members/{memberId}")]
     public async Task<ActionResult<RequestResponse>> ChangeChatAdmin([FromRoute] Guid chatId, [FromRoute] Guid memberId)
     {
-        var userIdString = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-        var userId = Guid.Parse(userIdString!);
+        var userId = User.GetUserId();
         var authResult = await _authService.UserIsChatAdmin(userId, chatId);
         if (!authResult.IsSuccess)
         {
@@ -193,7 +190,7 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
             });
         }
 
-        var changeAdminResult = await _chatService.ChangeChatAdmin(chatId, memberId);
+        var changeAdminResult = await _chatUserService.ChangeChatAdmin(chatId, memberId);
         if (changeAdminResult.IsSuccess)
         {
             return Ok(new RequestResponse
@@ -202,13 +199,49 @@ public class ChatController(IChatUserService chatService, IAuthService authServi
                 Message = changeAdminResult.Message
             });
         }
-        else
+
+        return BadRequest(new RequestResponse
         {
-            return BadRequest(new RequestResponse
-            {
-                IsSuccess = false,
-                Message = changeAdminResult.Message
-            });
+            IsSuccess = false, 
+            Message = changeAdminResult.Message
+        });
+    }
+
+    [Authorize]
+    [HttpGet("summaries")]
+    public async Task<ActionResult<ChatSummaryDto>> GetChatSummaries()
+    {
+        var userId = User.GetUserId();
+        var chatResult = await _chatService.GetUserChats(userId);
+        var chatSummaries = chatResult.Data!.Select(c => ChatDtoMappers.ToChatSummaryDto(c));
+         
+        return Ok(chatSummaries);
+    }
+    
+    [Authorize]
+    [HttpGet("{chatId}/messages")]
+    public async Task<ActionResult<MessageDto>> GetMessages([FromRoute] Guid chatId, [FromQuery] int? messageCount, [FromQuery] PaginatedChatHistoryOptionsQuery options)
+    {
+        var userId = User.GetUserId();
+        var validOptions = options.validate();
+        if (validOptions && messageCount is not null)
+        {
+            return BadRequest("Must choose between messageCount and pagination options");
         }
+        
+        if (validOptions) {
+            var paginationOptions = _chatService.GetPaginatedChatHistory(ChatDtoMappers.ToChatHistoryOptions(options));
+        }
+        if (messageCount is not null)
+        {
+            var messageResult = await _chatService.GetTopNChatMessages(chatId, messageCount.Value);
+            if (messageResult.IsSuccess)
+            {
+                return Ok(messageResult.Data!);
+            }
+        }
+        
+        // TODO: better error message
+        return BadRequest("Need either messageCount or pagination params correctly");
     }
 }

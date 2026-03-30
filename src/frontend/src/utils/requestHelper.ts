@@ -1,4 +1,4 @@
-import { ApiError } from '@/api/httpRequests';
+import { ApiError } from '@/api/http/httpRequests';
 import { useAuthStore } from '@/stores/authStore';
 
 const authStore = useAuthStore();

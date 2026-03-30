@@ -1,6 +1,6 @@
 ﻿namespace realTimeMessagingWebApp.DTOs;
 
-public sealed record class PaginatedChatHistoryOptionsDto
+public sealed record class PaginatedChatHistoryOptions
 {
     public Guid ChatId { get; init; }
     public int  StartMessageSequence { get; init; }

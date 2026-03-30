@@ -1,11 +1,14 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import type { ChatSummary } from './types/chatStoreTypes';
-import type { chatSummaryDto } from '@/api/dtos';
-import { getChatSummaries } from '@/api/chatRequests';
+import type { chatSummaryDto } from '@/api';
 import { requestWithAuthRetry } from '@/utils/requestHelper';
+import SignalRConnection from '@/api/signalR/connection';
+import type { chatMessageDto } from '@/api/dtos/chatDtos';
+import { getChatSummaries } from '@/api/http/chatRequests';
 
 export const useChatStore = defineStore('chat', () => {
+    const chatHub = new SignalRConnection();
     // state
     const chatSummaries = ref<ChatSummary[]>([]);
     const currentChatId = ref<string | null>(null);
@@ -17,12 +20,12 @@ export const useChatStore = defineStore('chat', () => {
         if (currentChatId.value === null) {
             return null;
         }
-        return chatSummaries.value.find((d) => d.id === currentChatId.value);
+        return chatSummaries.value.find(d => d.id === currentChatId.value);
     });
 
     // actions
     function setCurrentChatId(id: string): void {
-        if (!chatSummaries.value.some((d) => d.id === id)) {
+        if (!chatSummaries.value.some(d => d.id === id)) {
             throw new Error(`Chat with id "${id}" not found`);
         }
         currentChatId.value = id;
@@ -30,14 +33,13 @@ export const useChatStore = defineStore('chat', () => {
 
     async function refreshChatSummaries(): Promise<void> {
         // TODO: do we need any error handelling here?
-        let summaries = await requestWithAuthRetry<chatSummaryDto[]>(
-            async () => await getChatSummaries()
-        );
+        let summaries = await requestWithAuthRetry<chatSummaryDto[]>(getChatSummaries);
         chatSummaries.value = summaries.map(toChatSummary);
     }
 
-    function getChatHistory(id: string, firstMessageSeq: number, lastMessageSeq: number) {
+    async function getRecentChatHistory(id: string, range: number): Promise<void> {
         // make request
+        const history: chatMessageDto[] = await chatHub.connection.invoke('GetRecentChatHistory', id, range);
     }
 
     function getCachedChatHistory(id: string) {}

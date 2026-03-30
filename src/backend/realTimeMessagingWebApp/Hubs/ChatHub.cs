@@ -38,27 +38,26 @@ public sealed class ChatHub(
     public async Task JoinChatAsync(Guid chatId)
     {
         var strChatId = chatId.ToString();
-        if (!UserHasJoinedChat(strChatId))
+        ThrowIfUserNotInChat(strChatId, "You are already in the chat, no need to join it again");
+        
+        var userIdString = Context.User?.Claims.First(c => c.Type == "id")?.Value;
+        var userId = Guid.Parse(userIdString!);
+        var isMember = await _authService.UserIsChatMember(userId, chatId);
+        if (!isMember.IsSuccess)
         {
-            var userIdString = Context.User?.Claims.First(c => c.Type == "id")?.Value;
-            var userId = Guid.Parse(userIdString!);
-            var isMember = await _authService.UserIsChatMember(userId, chatId);
-            if (!isMember.IsSuccess)
-            {
-                throw new HubException("You must be a member of the chat to join it"); // does this return a bad request type thing to the frontend?
-            }
-
-            if (!rooms.TryGetValue(strChatId, out ConcurrentDictionary<string, byte>? value))
-            {
-                value = [];
-                rooms[strChatId] = value;
-            }
-
-            value.TryAdd(strChatId, 0);
-            await Groups.AddToGroupAsync(Context.ConnectionId, strChatId);
+            throw new HubException("You must be a member of the chat to join it"); // does this return a bad request type thing to the frontend?
         }
-    }
 
+        if (!rooms.TryGetValue(strChatId, out ConcurrentDictionary<string, byte>? value))
+        {
+            value = [];
+            rooms[strChatId] = value;
+        }
+
+        value.TryAdd(strChatId, 0);
+        await Groups.AddToGroupAsync(Context.ConnectionId, strChatId);
+    }
+    
     // TODO: decide if you actually want to leave a chat like ever..
     public async Task LeaveChatAsync(Guid chatId)
     {
@@ -68,32 +67,30 @@ public sealed class ChatHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, strChatId);
     }
 
-    public async Task GetChatHistoryPaginated(PaginatedChatHistoryOptionsDto options)
-    {
-        var strChatId = options.ChatId.ToString();
-        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to leave it");
-        var chatOptions = ChatDtoMappers.ToChatHistoryOptions(options);
-        if (!ChatHistoryOptionsValidator.IsValid(chatOptions))
-        {
-            throw new HubException("Invalid chat options.");
-        }
-        var historyResult = await _chatService.GetPaginatedChatHistory(chatOptions);
+    // public async Task GetChatHistoryPaginatedAsync(PaginatedChatHistoryOptionsDto options)
+    // {
+    //     ThrowIfUserNotInChat(options.ChatId, "You must join the chat before trying to leave it");
+    //     var chatOptions = ChatDtoMappers.ToChatHistoryOptions(options);
+    //     if (!ChatHistoryOptionsValidator.IsValid(chatOptions))
+    //     {
+    //         throw new HubException("Invalid chat options.");
+    //     }
+    //     var historyResult = await _chatService.GetPaginatedChatHistory(chatOptions);
+    //
+    //     if (historyResult.IsSuccess)
+    //     {
+    //         var historyDtos = await _dtoAssemblerService.AssembleMessageDtosFromMessages(historyResult.Data!);
+    //         await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", historyDtos);
+    //     }
+    //     else
+    //     {
+    //         throw new HubException(historyResult.Message);
+    //     }
+    // }
 
-        if (historyResult.IsSuccess)
-        {
-            var historyDtos = await _dtoAssemblerService.AssembleMessageDtosFromMessages(historyResult.Data!);
-            await Clients.Clients(Context.ConnectionId).SendAsync("ReceiveChatHistoryPaginated", historyDtos);
-        }
-        else
-        {
-            throw new HubException(historyResult.Message);
-        }
-    }
-
-    public async Task GetRecentChatHistory(Guid chatId, int range)
+    public async Task GetRecentChatHistoryAsync(Guid chatId, int range)
     {
-        var strChatId = chatId.ToString();
-        ThrowIfUserNotInChat(strChatId, "You must join the chat before trying to get its history.");
+        ThrowIfUserNotInChat(chatId, "You must join the chat before trying to get its history.");
         var historyResult = await _chatService.GetTopNChatMessages(chatId, range);
 
         if (historyResult.IsSuccess)
@@ -107,7 +104,7 @@ public sealed class ChatHub(
         }
     }
 
-    public async Task GetPreSignedUrlForChatImageUpload(ImageDetailsForUploadUrlDto imageDetails)
+    public async Task GetPreSignedUrlForChatImageUploadAsync(ImageDetailsForUploadUrlDto imageDetails)
     {
         var chatId = imageDetails.ChatId.ToString();
         ThrowIfUserNotInChat(chatId, "You must join the chat before trying to upload files to it");
@@ -127,8 +124,7 @@ public sealed class ChatHub(
             });
     }
 
-    //What the hell is the user argument
-    public async Task SendMessageToChat(UserChatMessageRecieveDto messageContents) // add all the other data that needs to be sent by front end when tring to send a message
+    public async Task SendMessageToChatAsync(UserChatMessageRecieveDto messageContents) // add all the other data that needs to be sent by front end when tring to send a message
     {
         var chatId = messageContents.ChatId.ToString();
         ThrowIfUserNotInChat(chatId, "You must join the chat before sending messages");
@@ -162,9 +158,14 @@ public sealed class ChatHub(
         }
     }
 
+    void ThrowIfUserNotInChat(Guid chatId, string errorMessage = "You must join the chat before performing this operation")
+    {
+        ThrowIfUserNotInChat(chatId.ToString(), errorMessage);
+    }
+
     bool UserHasJoinedChat(string chatId) 
     {
-        return rooms.TryGetValue(chatId, out ConcurrentDictionary<string, byte>? value) || (value is not null && !value.ContainsKey(Context.ConnectionId));
+        return rooms.TryGetValue(chatId, out var value) && value is not null && value.ContainsKey(Context.ConnectionId);
     }
 
 
