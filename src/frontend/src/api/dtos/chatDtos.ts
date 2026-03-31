@@ -39,10 +39,9 @@ export type imageDetailsForUploadUrlDto = {
     fileType: string;
 };
 
-// TODO shouldnt need this cause moving to rest
+// idk if this is trully a dto but
 export type PaginatedChatHistoryOptionsDto = {
-    chatId: string;
-    startMessageSequence: number;
-    endMessageSequence: number;
-    EndFallBackToMaxInt: boolean;
+    startMessageSequence?: number;
+    endMessageSequence?: number;
+    EndFallBackToMaxInt?: boolean;
 };

@@ -4,8 +4,8 @@ import type { ChatSummary } from './types/chatStoreTypes';
 import type { chatSummaryDto } from '@/api';
 import { requestWithAuthRetry } from '@/utils/requestHelper';
 import SignalRConnection from '@/api/signalR/connection';
-import type { chatMessageDto } from '@/api/dtos/chatDtos';
-import { getChatSummaries } from '@/api/http/chatRequests';
+import type { chatMessageDto, PaginatedChatHistoryOptionsDto } from '@/api/dtos/chatDtos';
+import { getChatSummaries, getMessages } from '@/api/http/chatRequests';
 
 export const useChatStore = defineStore('chat', () => {
     const chatHub = new SignalRConnection();
@@ -13,6 +13,7 @@ export const useChatStore = defineStore('chat', () => {
     const chatSummaries = ref<ChatSummary[]>([]);
     const currentChatId = ref<string | null>(null);
     const chatHistoryCache = ref<string[]>([]); // need actual type for this. key should be chatID value should be chat summar and then nested is chat history
+    const tempMessageStore = ref<chatMessageDto[]>([]); // this is just for testing the chat history retrieval functions, will be removed after testing
 
     // getters
     const chatCount = computed(() => chatSummaries.value.length);
@@ -37,9 +38,17 @@ export const useChatStore = defineStore('chat', () => {
         chatSummaries.value = summaries.map(toChatSummary);
     }
 
-    async function getRecentChatHistory(id: string, range: number): Promise<void> {
+    async function getNewestMessages(id: string, range: number): Promise<void> {
         // make request
-        const history: chatMessageDto[] = await chatHub.connection.invoke('GetRecentChatHistory', id, range);
+        const history: chatMessageDto[] = await requestWithAuthRetry<chatMessageDto[]>(() => getMessages(id, range));
+        tempMessageStore.value = history; // for testing, remove after testing
+    }
+
+    async function getMessageRange(id: string, chatHistoryOptions: PaginatedChatHistoryOptionsDto): Promise<void> {
+        const history: chatMessageDto[] = await requestWithAuthRetry<chatMessageDto[]>(() =>
+            getMessages(id, undefined, chatHistoryOptions)
+        );
+        tempMessageStore.value = history; // for testing, remove after testing
     }
 
     function getCachedChatHistory(id: string) {}

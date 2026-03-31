@@ -230,7 +230,7 @@ public class ChatController(IChatUserService chatUserService, IAuthService authS
         }
         
         if (validOptions) {
-            var paginationOptions = _chatService.GetPaginatedChatHistory(ChatDtoMappers.ToChatHistoryOptions(options));
+            var paginationOptions = _chatService.GetPaginatedChatHistory(ChatDtoMappers.ToChatHistoryOptions(chatId, options));
         }
         if (messageCount is not null)
         {
