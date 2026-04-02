@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using realTimeMessagingWebAppInfra.Persistence.Data;
@@ -11,9 +12,11 @@ using realTimeMessagingWebAppInfra.Persistence.Data;
 namespace realTimeMessagingWebApp.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20260402085115_add isValid sql default")]
+    partial class addisValidsqldefault
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,6 +218,7 @@ namespace realTimeMessagingWebApp.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<bool>("isValid")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
@@ -233,6 +237,7 @@ namespace realTimeMessagingWebApp.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
