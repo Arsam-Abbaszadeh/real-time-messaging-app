@@ -1,111 +1,167 @@
 # real-time-messaging-app
 
-> **Work in progress:** this project is still being built, and a few important pieces are clearly mid-flight.
+> **Work in progress:** this repository is actively being built.
 
-## What this project does
+## What this project is
 
-This repo is aiming to become a real-time messaging platform with a Vue frontend and an ASP.NET Core backend. The overall direction looks like private and group chat with JWT-based auth, live messaging over SignalR, Kafka in the message pipeline, PostgreSQL for persistence, and object storage for media uploads.
+This repository contains a real-time messaging application. It is split into a Vue frontend, an ASP.NET Core backend, a Kafka-based message pipeline, and shared infrastructure for persistence and file storage.
 
-From the code that is here today, the intended flow seems to be:
+The goal of the project is to support authenticated chat between users, including chat creation, member management, live message delivery, message history, friendship requests, and media uploads.
 
-1. A user creates an account and logs in.
-2. The backend issues an access token and refresh token.
-3. The frontend loads chat summaries and message history.
-4. Users join chat rooms through SignalR and exchange messages in real time.
-5. Messages are pushed into Kafka for downstream processing.
-6. Attachments are uploaded through pre-signed object storage URLs.
+## How the system works
 
-## Technical pieces that are already implemented
+1. A user signs up and logs in through the web app.
+2. The backend issues a JWT access token and a refresh token.
+3. The frontend loads the user's chats and message history through the API.
+4. The frontend connects to the SignalR chat hub for live updates.
+5. New messages are broadcast to connected clients in real time.
+6. Message events are published to Kafka for background processing.
+7. Media uploads use pre-signed object storage URLs instead of sending large files directly through the API.
 
-### Backend
-
-- **ASP.NET Core Web API** in `src/backend/realTimeMessagingWebApp`
-- **Swagger** enabled in development
-- **JWT authentication** with refresh-token support
-- **SignalR chat hub** for joining chats, requesting recent history, sending messages, and requesting pre-signed upload URLs
-- **Kafka producer** wired into the message send path
-- **EF Core + PostgreSQL** persistence with migrations already checked in
-- **Cloudflare R2 / S3-compatible storage service** for generating client upload and download URLs
-
-The current API surface already includes routes for:
-
-- creating accounts
-- logging in
-- refreshing access tokens
-- creating chats
-- adding or removing chat members
-- changing chat admins
-- deleting chats
-- fetching chat summaries
-- fetching recent messages
-- creating, accepting, and declining friendship requests
+## What is implemented today
 
 ### Frontend
 
-- **Vue 3 + Vite + TypeScript**
-- **Pinia** for state management
-- **Vue Router** with login, create-account, and chat routes
-- **HTTP request layer** for auth and chat endpoints
-- **SignalR client scaffolding**
-- a **basic login screen** that is connected to the auth store
+The frontend lives in `src/frontend` and currently uses:
 
-### Data and infrastructure
+- **Vue 3**
+- **Vite**
+- **TypeScript**
+- **Pinia** for application state
+- **Vue Router** for navigation
+- **SignalR client code** for real-time communication
+- **SCSS** for styling
 
-- A PostgreSQL-backed domain model for:
-  - users
-  - chats
-  - chat memberships
-  - messages
-  - message attachments
-  - friendships
-  - refresh tokens
-- A local **Docker Compose** setup in `infra/docker-compose.yml` for:
-  - Kafka broker
-  - Kafka UI
-- A **Bruno collection** in `realTimeMessagingWebAppBruno/` for manual API testing
+Current frontend structure includes:
 
-## What still looks unfinished
+- a login route and login page
+- a create-account route
+- a chat route
+- API request helpers for auth and chat requests
+- store modules for auth and chat state
 
-Based on the current code, these are the main gaps that still seem to need work:
+### Backend API
 
-- The **Kafka consumer** exists as a project, but it is still basically a stub and does not appear to consume and persist messages yet.
-- The main **chat UI** is not built out yet. `ChatLayout.vue` is still effectively a placeholder, and the chat components are empty right now.
-- The **create-account page** is still placeholder UI and is not wired into the backend flow yet.
-- **Paginated chat history** looks partially started on the backend and frontend, but not finished end to end.
-- **Frontend auth/session flow** still needs polish, especially around access-token handling, re-auth, and redirect behavior when auth fails.
-- The backend has support for **pre-signed upload URLs**, but the frontend media upload experience does not look finished yet.
-- Some **frontend/backend route wiring** still looks out of sync, which suggests a few flows are mid-integration.
-- **CORS and local dev wiring** still look pretty development-only and likely need cleanup before this feels smooth to run.
-- There are no obvious **automated tests** in the repo yet.
+The main backend lives in `src/backend/realTimeMessagingWebApp` and currently provides:
 
-## Repo layout
+- **ASP.NET Core Web API**
+- **Swagger** in development
+- **JWT bearer authentication**
+- **refresh-token support**
+- **SignalR** for live chat events
+- **Kafka producer integration**
+
+Current backend endpoints support:
+
+- account creation
+- user login
+- access-token refresh
+- chat creation
+- adding chat members
+- removing chat members
+- changing chat admins
+- deleting chats
+- fetching chat summaries
+- fetching chat messages
+- creating friendship requests
+- accepting friendship requests
+- declining friendship requests
+
+The SignalR hub currently handles:
+
+- joining a chat room
+- leaving a chat room
+- requesting recent chat history
+- sending chat messages
+- requesting pre-signed upload URLs for chat media
+
+### Persistence and storage
+
+The shared infrastructure project lives in `src/backend/realTimeMessagingWebAppInfra`.
+
+It currently includes:
+
+- **EF Core**
+- **PostgreSQL** support through **Npgsql**
+- database migrations
+- an object storage service using an **S3-compatible API**
+- configuration for **Cloudflare R2**
+
+The current data model includes:
+
+- users
+- chats
+- chat memberships
+- messages
+- message attachments
+- friendships
+- refresh tokens
+
+### Messaging infrastructure
+
+The messaging pipeline currently includes:
+
+- a Kafka producer in the main API
+- a worker project in `src/backend/KafkaConsumer`
+- Docker Compose setup for **Kafka** and **Kafka UI** in `infra/docker-compose.yml`
+
+### API tooling
+
+The repository also includes a **Bruno** collection in `realTimeMessagingWebAppBruno/` for manual API testing.
+
+## What still needs to be built
+
+The next major pieces of work are:
+
+- finish the create-account flow in the frontend
+- build out the chat layout and chat components
+- complete end-to-end paginated message history
+- complete the Kafka consumer so message events can be processed and persisted through the background worker
+- finish the frontend flow for media uploads
+- tighten session refresh and auth failure handling in the frontend
+- improve local development wiring for frontend-to-backend and SignalR communication
+- add automated tests
+
+## Repository structure
 
 ```text
-infra/                                   Kafka + Kafka UI local setup
-realTimeMessagingWebAppBruno/            Bruno API request collection
-src/frontend/                            Vue frontend
-src/backend/realTimeMessagingWebApp/     ASP.NET Core API + SignalR hub
-src/backend/KafkaConsumer/               background worker for Kafka consumption
-src/backend/realTimeMessagingWebAppInfra/ persistence + storage infrastructure
+infra/                                     local Kafka and Kafka UI setup
+realTimeMessagingWebAppBruno/              Bruno API request collection
+src/frontend/                              Vue frontend
+src/backend/realTimeMessagingWebApp/       ASP.NET Core API and SignalR hub
+src/backend/KafkaConsumer/                 background worker for Kafka consumption
+src/backend/realTimeMessagingWebAppInfra/  database and storage infrastructure
 ```
 
-## Running it locally
+## Running locally
 
-This repo does not look fully turnkey yet, but the current setup suggests this general workflow:
+### Services
 
-1. Start Kafka and Kafka UI from `infra/docker-compose.yml`.
-2. Provide backend configuration for:
-   - `ConnectionStrings:DefaultConnection`
-   - `Jwt:JwtOptions`
-   - `Jwt:JwtCreationOptions`
-   - `KafkaConfigurations`
-   - `R2`
-3. Run the API in `src/backend/realTimeMessagingWebApp` on `http://localhost:5231`.
-4. Run the worker in `src/backend/KafkaConsumer`.
-5. In `src/frontend`, set `VITE_API_URL` to the backend API base (likely `http://localhost:5231/api`) and start the Vite app on port `5173`.
+Start the local Kafka services from `infra/docker-compose.yml`.
 
-The frontend SignalR connection also still looks like it may need some extra local-dev proxy or origin configuration before that part feels smooth.
+### Backend configuration
 
-## Current takeaway
+The backend expects configuration for:
 
-The project already has a strong technical backbone: auth, chat domain modeling, SignalR, Kafka, PostgreSQL, and object storage are all present. The biggest next step is turning those backend foundations into a complete end-to-end messaging experience by finishing the consumer, wiring the frontend properly, and closing the gaps around chat UI, account creation, and message persistence.
+- `ConnectionStrings:DefaultConnection`
+- `Jwt:JwtOptions`
+- `Jwt:JwtCreationOptions`
+- `KafkaConfigurations`
+- `R2`
+
+### Backend apps
+
+Run:
+
+- the API from `src/backend/realTimeMessagingWebApp`
+- the worker from `src/backend/KafkaConsumer`
+
+The API development profile uses `http://localhost:5231`.
+
+### Frontend
+
+In `src/frontend`, set `VITE_API_URL` to the backend API base URL and run the Vite app on port `5173`.
+
+## Summary
+
+This repository is the foundation for a full real-time messaging system. The backend architecture, data model, authentication flow, message pipeline, and storage integrations are already in place. The remaining work is focused on completing the user-facing chat experience and finishing the background processing path.
