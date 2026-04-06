@@ -1,8 +1,6 @@
 import { ApiError } from '@/api/http/httpRequests';
 import { useAuthStore } from '@/stores/authStore';
 
-const authStore = useAuthStore();
-
 export async function requestWithAuthRetry<TResponse>(
     requestCallback: () => Promise<TResponse>,
     requestRetryCount = 2,
@@ -23,14 +21,11 @@ export async function requestWithAuthRetry<TResponse>(
                         // TODO: figure out how to the above
                         throw new Error(); // temp
                     } else {
-                        throw new ApiError(
-                            `re auth reqeust failed, with message: ${error.message}`,
-                            401,
-                            error.body
-                        );
+                        throw new ApiError(`re auth reqeust failed, with message: ${error.message}`, 401, error.body);
                     }
                 }
-                authStore.refreshAccessToken();
+                const authStore = useAuthStore();
+                await authStore.refreshAccessToken();
             } else {
                 throw error; // is this correct?
             }

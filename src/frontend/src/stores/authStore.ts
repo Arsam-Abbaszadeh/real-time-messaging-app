@@ -60,10 +60,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function refreshAccessToken(): Promise<authResult> {
-        if (!accessToken.value) {
-            throw Error('No access token to refresh'); // should not happen if used correctly
-        }
-
         try {
             const response = await requestNewAccessToken();
             accessToken.value = response.accessToken;

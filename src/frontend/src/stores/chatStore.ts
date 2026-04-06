@@ -38,7 +38,7 @@ export const useChatStore = defineStore('chat', () => {
         chatSummaries.value = summaries.map(toChatSummary);
     }
 
-    async function getNewestMessages(id: string, range: number): Promise<void> {
+    async function getNewMessages(id: string, range: number): Promise<void> {
         // make request
         const history: chatMessageDto[] = await requestWithAuthRetry<chatMessageDto[]>(() => getMessages(id, range));
         tempMessageStore.value = history; // for testing, remove after testing
@@ -53,6 +53,17 @@ export const useChatStore = defineStore('chat', () => {
 
     function getCachedChatHistory(id: string) {}
     // use dexie.js to create cache and use it within this store
+
+    return {
+        // state
+        tempMessageStore,
+        // getters
+        refreshChatSummaries,
+        getNewMessages,
+        getMessageRange,
+        // actions
+        setCurrentChatId,
+    };
 });
 
 // helpers
