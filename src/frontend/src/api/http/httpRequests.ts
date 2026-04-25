@@ -1,4 +1,12 @@
+import { useAuthStore } from '@/stores/authStore';
+import { HEADERS } from './httpRequestHeaderConstants';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL as string;
+
+type HttpHeaders = Record<string, string>;
+type HttpRequestInit = Omit<RequestInit, 'headers'> & {
+    headers?: HttpHeaders;
+};
 
 export class ApiError extends Error {
     public readonly status: number;
@@ -13,10 +21,19 @@ export class ApiError extends Error {
     }
 }
 
-export async function fetchJson<TResponse>(
-    path: string,
-    init: RequestInit = {}
-): Promise<TResponse> {
+export function fetchJsonWithAuth<TResponse>(path: string, init: HttpRequestInit = {}): Promise<TResponse> {
+    const authStore = useAuthStore();
+
+    return fetchJson<TResponse>(path, {
+        ...init,
+        headers: {
+            ...(init.headers ?? {}),
+            ...(authStore.accessToken ? { [HEADERS.AUTHORIZATION]: authStore.accessToken } : {}),
+        },
+    });
+}
+
+export async function fetchJson<TResponse>(path: string, init: HttpRequestInit = {}): Promise<TResponse> {
     const url = `${API_BASE_URL}${path}`;
 
     const response = await fetch(url, {
@@ -37,8 +54,7 @@ export async function fetchJson<TResponse>(
             throw new ApiError(errorMessage, response.status, body);
         }
         // other unexpected errors
-        const errorMessage =
-            typeof body === 'string' ? body : (body as any)?.message || response.statusText;
+        const errorMessage = typeof body === 'string' ? body : (body as any)?.message || response.statusText;
 
         throw new ApiError(errorMessage, response.status, body);
     }

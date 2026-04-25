@@ -30,6 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
             // need to check if we can unsucessful login without throwing error
             const response = await requestlogin(dto);
             accessTokenExpiry.value = response.accessTokenExpiration;
+            accessToken.value = response.accessToken;
 
             return {
                 success: true,

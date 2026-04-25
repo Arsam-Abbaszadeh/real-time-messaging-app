@@ -1,10 +1,5 @@
 import { fetchJson } from './httpRequests.ts';
-import type {
-    LoginRequestDto,
-    LoginResponseDto,
-    CreateAccountRequestDto,
-    UserSummaryDto,
-} from '../index.ts';
+import type { LoginRequestDto, LoginResponseDto, CreateAccountRequestDto, UserSummaryDto } from '../index.ts';
 import { HEADERS, HEADER_VALUES } from './httpRequestHeaderConstants.ts';
 
 export async function requestlogin(dto: LoginRequestDto): Promise<LoginResponseDto> {
