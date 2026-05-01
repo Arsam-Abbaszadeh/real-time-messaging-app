@@ -1,9 +1,9 @@
-import { fetchJson } from './httpRequests.ts';
+import { fetchJson, fetchJsonWithAuth } from './httpRequests.ts';
 import { HEADERS, HEADER_VALUES } from './httpRequestHeaderConstants.ts';
 import type { chatMessageDto, chatSummaryDto, PaginatedChatHistoryOptionsDto } from '../dtos/chatDtos.ts';
 
 export async function getChatSummaries(): Promise<chatSummaryDto[]> {
-    return await fetchJson<chatSummaryDto[]>('/chat/summaries', {
+    return await fetchJsonWithAuth<chatSummaryDto[]>('/chat/summaries', {
         method: 'GET',
         headers: {
             [HEADERS.CONTENT_TYPE]: HEADER_VALUES.APPLICATION_JSON,

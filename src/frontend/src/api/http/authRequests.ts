@@ -1,4 +1,4 @@
-import { fetchJson } from './httpRequests.ts';
+import { fetchJson, fetchJsonWithAuth } from './httpRequests.ts';
 import type { LoginRequestDto, LoginResponseDto, CreateAccountRequestDto, UserSummaryDto } from '../index.ts';
 import { HEADERS, HEADER_VALUES } from './httpRequestHeaderConstants.ts';
 
@@ -23,7 +23,7 @@ export async function requestCreateAccount(dto: CreateAccountRequestDto): Promis
 }
 
 export async function requestNewAccessToken(): Promise<LoginResponseDto> {
-    return await fetchJson<LoginResponseDto>('/user/refreshaccesstokentoken', {
+    return await fetchJsonWithAuth<LoginResponseDto>('/user/refreshaccesstokentoken', {
         method: 'GET',
     });
 }

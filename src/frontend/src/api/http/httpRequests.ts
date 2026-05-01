@@ -28,7 +28,7 @@ export function fetchJsonWithAuth<TResponse>(path: string, init: HttpRequestInit
         ...init,
         headers: {
             ...(init.headers ?? {}),
-            ...(authStore.accessToken ? { [HEADERS.AUTHORIZATION]: authStore.accessToken } : {}),
+            ...(authStore.accessToken ? { [HEADERS.AUTHORIZATION]: 'Bearer ' + authStore.accessToken } : {}),
         },
     });
 }
