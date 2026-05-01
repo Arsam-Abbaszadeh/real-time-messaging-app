@@ -31,6 +31,10 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
             .Property(e => e.ChatId)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql(uuidGenSql);
+        
+        modelBuilder.Entity<Chat>()
+            .Property(e => e.ChatImageUrl)
+            .HasDefaultValue(""); // need to actually default chat image id
 
         modelBuilder.Entity<ChatConnector>()
             .Property(e => e.ChatConnectorId)
