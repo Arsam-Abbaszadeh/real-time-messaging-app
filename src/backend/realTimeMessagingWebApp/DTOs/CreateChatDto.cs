@@ -10,11 +10,9 @@ namespace realTimeMessagingWebApp.DTOs
 
         public ICollection<Guid> ChatMembers { get; init; } = new HashSet<Guid>();
 
-        public ChatType ChatType { get; init; } // I dont like how this needs to be synced across
-
-        public Guid? Admin { get; init; }
-
-        //public Guid AdminId { get; set; } // We can get this from the JWT
+        public ChatType ChatType { get; init; }
+        
+        public Guid? AdminId { get; init; }
 
     }
 }

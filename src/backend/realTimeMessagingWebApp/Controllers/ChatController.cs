@@ -24,7 +24,7 @@ public class ChatController(IChatUserService chatUserService, IAuthService authS
         var userId = User.GetUserId();
 
         var newChat = ChatDtoMappers.ToChatEntity(chatDto);
-        var chatResult = await _chatUserService.CreateAndAddMembersToChat(newChat, userId, chatDto.Admin, chatDto.ChatMembers);
+        var chatResult = await _chatUserService.CreateAndAddMembersToChat(newChat, userId, chatDto.AdminId, chatDto.ChatMembers);
 
         if (chatResult.IsSuccess)
         {
@@ -35,14 +35,12 @@ public class ChatController(IChatUserService chatUserService, IAuthService authS
                 Message = chatResult.Message,
             });
         }
-        else
+        
+        return BadRequest(new RequestResponse
         {
-            return BadRequest(new RequestResponse
-            {
-                IsSuccess = false,
-                Message = chatResult.Message
-            });
-        }
+            IsSuccess = false,
+            Message = chatResult.Message
+        });
     }
 
     [Authorize]
@@ -218,6 +216,7 @@ public class ChatController(IChatUserService chatUserService, IAuthService authS
         return Ok(chatSummaries);
     }
     
+    // TODO, this is probs redundant, we should fetch messages using web socket foreach chat from the client
     [Authorize]
     [HttpGet("{chatId}/messages")]
     public async Task<ActionResult<MessageDto>> GetMessages([FromRoute] Guid chatId, [FromQuery] int? messageCount, [FromQuery] PaginatedChatHistoryOptionsQuery options)

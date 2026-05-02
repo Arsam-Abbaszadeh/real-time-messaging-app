@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using realTimeMessagingWebApp.DTOs;
 using realTimeMessagingWebApp.DtoMappers;
 using realTimeMessagingWebApp.Services;
-using realTimeMessagingWebApp.Controllers.ResponseModels;
-using realTimeMessagingWebAppInfra.Persistence.Entities;
 using Microsoft.Extensions.Options;
 using realTimeMessagingWebApp.Configurations;
 

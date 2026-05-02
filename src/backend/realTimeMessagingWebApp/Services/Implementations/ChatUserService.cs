@@ -22,6 +22,7 @@ namespace realTimeMessagingWebApp.Services
         public async Task<ServiceResult> AddUserToChat(Guid chatId, Guid memberId) 
             => await AddUsersToChat(chatId, [memberId]);
 
+        // TODO: only works if users being added are friends with admin, but doesnt check for current user being admin, so its kind of assuming the method is only to be used in admin adding members context, I dont like it
         public async Task<ServiceResult> AddUsersToChat(Guid chatId, ICollection<Guid> memberIds)
         {
             var actualChat = await _customRepository.GetFullEntityAsync(_context, chatId, true, gc => gc.ChatMembers);
@@ -71,7 +72,7 @@ namespace realTimeMessagingWebApp.Services
                     return new ServiceResult
                     {
                         IsSuccess = false,
-                        Message = $"User with ID {memberId} is not a friend of the chat creator and cannot be added"
+                        Message = $"User with ID {memberId} is not a friend of the chat admin and cannot be added"
                     };
                 }
 
@@ -253,7 +254,7 @@ namespace realTimeMessagingWebApp.Services
                 return new ServiceResult<Chat>
                 {
                     IsSuccess = false,
-                    Message = "Direct Message chats can only have one member",
+                    Message = "Direct Message chats can only have 2 members",
                 };
             }
 
@@ -263,15 +264,17 @@ namespace realTimeMessagingWebApp.Services
                 return chatCreationResult; // return the failure result
             }
 
-            var actualAdmin = admin ?? creator;
-            var adminChangeResult = await AssignChatAdmin(chat.ChatId, actualAdmin);
-            if (!adminChangeResult.IsSuccess)
+            if (admin is not null)
             {
-                return new ServiceResult<Chat>
+                var adminChangeResult = await AssignChatAdmin(chat.ChatId, admin.Value);
+                if (!adminChangeResult.IsSuccess)
                 {
-                    IsSuccess = false,
-                    Message = adminChangeResult.Message
-                };
+                    return new ServiceResult<Chat>
+                    {
+                        IsSuccess = false,
+                        Message = adminChangeResult.Message
+                    };
+                }
             }
 
             var trackedChat = chatCreationResult.Data!; // should not be null if result creation result was succesful
@@ -339,14 +342,11 @@ namespace realTimeMessagingWebApp.Services
                     Message = $"User with Id {newAdminId} was not assigned as admin of chat with Id {chatId}"
                 };
             }
-            else // not great logic, doesnt account for more than 
+            return new ServiceResult
             {
-                return new ServiceResult
-                {
-                    IsSuccess = true,
-                    Message = $"User with ID {newAdminId} assigned as admin of chat with ID {chatId} successfully",
-                };
-            }
+                IsSuccess = true, 
+                Message = $"User with ID {newAdminId} assigned as admin of chat with ID {chatId} successfully",
+            };
         }
 
         #region Helpers
@@ -355,9 +355,10 @@ namespace realTimeMessagingWebApp.Services
         {
             // assumes many values are already set in the chat entity
             chat.CreationDate = DateTime.UtcNow;
-            chat.ChatAdminId = chat.ChatCreatorId;
+            chat.ChatAdminId = creatorId;
             chat.ChatCreatorId = creatorId;
             await _context.Chats.AddAsync(chat);
+            await _context.SaveChangesAsync();
 
             var connector = new ChatConnector
             {
