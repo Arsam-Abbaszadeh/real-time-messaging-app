@@ -6,6 +6,16 @@ meta {
 
 post {
   url: http://localhost:5231/api/FriendShipRequest/newfriendrequest
-  body: none
+  body: json
   auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJSZWFsVGltZU1lc3NhZ2luZ1dlYkFwcFVzZXJzIiwiaXNzIjoiUmVhbFRpbWVNZXNzYWdpbmdXZWJBcHAiLCJleHAiOjE3NzgyNzgxOTAsImlkIjoiNTAyODdmMzMtNWFmZC00YjQ0LWIyMDUtZmQwYTRmMTU2NmYzIiwidXNlcm5hbWUiOiJ0ZXN0IiwiaWF0IjoxNzc3Njc4MTkwLCJuYmYiOjE3Nzc2NzgxOTB9.XzOGKlmU9GIZmWHTkQQwXGY5_UCoX8XBzOn5EGAplmY
+}
+
+body:json {
+  {
+    "friendid" : "be14d654-5e5d-4306-a9b8-6a44a25088e7"
+  }
 }
