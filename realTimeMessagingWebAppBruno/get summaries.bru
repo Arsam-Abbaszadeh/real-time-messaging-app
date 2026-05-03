@@ -1,0 +1,20 @@
+meta {
+  name: get summaries
+  type: http
+  seq: 11
+}
+
+get {
+  url: http://localhost:5231/api/chat/summaries
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJSZWFsVGltZU1lc3NhZ2luZ1dlYkFwcFVzZXJzIiwiaXNzIjoiUmVhbFRpbWVNZXNzYWdpbmdXZWJBcHAiLCJleHAiOjE3Nzg0MDYwODIsImlkIjoiNTAyODdmMzMtNWFmZC00YjQ0LWIyMDUtZmQwYTRmMTU2NmYzIiwidXNlcm5hbWUiOiJ0ZXN0IiwiaWF0IjoxNzc3ODA2MDgyLCJuYmYiOjE3Nzc4MDYwODJ9.4TilEDY-6KYQ8jcDVZDQ5_W_J_5jf2n81mqnoziJQ1c
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

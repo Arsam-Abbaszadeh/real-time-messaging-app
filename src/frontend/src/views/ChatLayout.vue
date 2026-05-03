@@ -1,4 +1,6 @@
-<template></template>
+<template>
+    <H1>Test</H1>
+</template>
 
 <script setup lang="ts">
 import { useChatStore } from '@/stores/chatStore';
