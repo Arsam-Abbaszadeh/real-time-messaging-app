@@ -1,5 +1,5 @@
-@use "./reset.scss";
-@use "./form.scss";
+@use './reset.scss';
+@use './form.scss';
 
 /* Global defaults (keep these lightweight) */
 :root {
@@ -17,7 +17,7 @@ html {
 
 body {
     margin: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 a {
@@ -46,10 +46,10 @@ a:hover {
 
 h1 {
     font-size: 2rem;
- 
 }
 
-input[type="text"], input[type="password"] {
+input[type='text'],
+input[type='password'] {
     // padding: 0.4rem 0.6rem;
     border: $common-border-size solid $gray;
     border-radius: $common-border-radius;
@@ -61,10 +61,9 @@ button {
     border-radius: $common-border-radius;
     background: none;
     color: black;
-    
+
     .form-button & {
         padding: 0.2rem 0.5rem;
-        
     }
 
     &:disabled {
@@ -74,5 +73,5 @@ button {
 }
 
 #app {
-        min-height: 100vh;
+    min-height: 100dvh;
 }

@@ -1,3 +1,3 @@
-import { ChatPlaceHolder } from './ChatPlaceholder.vue';
+import ChatPlaceholder from './ChatPlaceholder.vue';
 
-export {};
+export { ChatPlaceholder };
