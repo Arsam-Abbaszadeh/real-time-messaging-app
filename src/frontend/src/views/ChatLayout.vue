@@ -18,7 +18,7 @@ import ChatWindow from '@/components/ChatWindow.vue';
 import { useChatStore } from '@/stores/chatStore';
 import { computed, ref } from 'vue';
 
-// should these be moved to a store?
+// should be spread propely amongst sidebar and chat
 let chatDetails = ref(null);
 let currentChat = ref<string | null>(null);
 const chatStore = useChatStore();

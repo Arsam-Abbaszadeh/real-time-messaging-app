@@ -17,6 +17,7 @@
 main {
     flex: 1;
     display: flex;
+    justify-content: center;
     min-height: 0;
 }
 

@@ -30,15 +30,11 @@
                 </div>
 
                 <div class="form-submit-container">
-                    <button type="submit" class="form-button" :disabled="disableSubmit">
-                        Login
-                    </button>
+                    <button type="submit" class="form-button" :disabled="disableSubmit">Login</button>
                     <div class="error-message">{{ errorMesage }}</div>
                 </div>
             </form>
-            <RouterLink class="form-link" :to="{ name: ROUTE_NAMES.ACCOUNT }">
-                need an account? create account</RouterLink
-            >
+            <RouterLink class="form-link" :to="{ name: ROUTE_NAMES.ACCOUNT }"> need an account? create account</RouterLink>
         </div>
     </div>
 </template>
