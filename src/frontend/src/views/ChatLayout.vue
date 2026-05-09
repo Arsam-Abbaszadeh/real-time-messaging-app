@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import ChatPlaceholder from '@/components/ChatPlaceHolder.vue'; // the h is lower case now, idk anymore
+import ChatPlaceholder from '@/components/ChatPlaceholder.vue';
 import ChatSideBar from '@/components/ChatSideBar.vue';
 import ChatWindow from '@/components/ChatWindow.vue';
 import { useChatStore } from '@/stores/chatStore';

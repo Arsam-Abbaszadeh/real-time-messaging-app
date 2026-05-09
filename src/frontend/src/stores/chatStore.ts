@@ -11,7 +11,7 @@ export const useChatStore = defineStore('chat', () => {
     const chatHub = new SignalRConnection();
     // state
     const chatSummaries = ref<ChatSummary[]>([]);
-    const currentChatId = ref<string | null>(null);
+    const currentChatId = ref<string | null>(null); // Can we make this only able to be set in setCurrentChatId?
     const chatHistoryCache = ref<string[]>([]); // need actual type for this. key should be chatID value should be chat summar and then nested is chat history
     const tempMessageStore = ref<chatMessageDto[]>([]); // this is just for testing the chat history retrieval functions, will be removed after testing
 
@@ -57,6 +57,8 @@ export const useChatStore = defineStore('chat', () => {
     return {
         // state
         tempMessageStore,
+        chatSummaries,
+        currentChatId,
         // getters
         refreshChatSummaries,
         getNewMessages,
